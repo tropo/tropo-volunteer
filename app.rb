@@ -42,24 +42,35 @@ post '/process_zip.json' do
       :vol_enddate => (Time.now+604800).strftime("%Y-%m-%d")
       }
       
-    url = "http://www.allforgood.org/api/volopps?key=tropo"
-    params.each{|key,value| url << "&#{key}=#{value}"}
+    params_str = ""
+    params.each{|key,value| params_str << "&#{key}=#{value}"}
     
     begin
-      session[:data] = JSON.parse(open(url).read)
+      session[:data] = JSON.parse(open("http://www.allforgood.org/api/volopps?key=tropo"+params_str).read)
     rescue
       t.say "It looks like something went wrong with our data source. Please try again later. Goodbye."
       t.hangup
     end
     
+    case session[:channel]
+    when ["PSTN","VOIP"]
+      t.say "VOICE network"
+    when ["TWITTER"]
+      t.say "Volunteer opportunities in your area for the next 7 days: #{tinyurl("http://www.allforgood.org/search?"+params_str)}"
+      t.hangup
+    else # TEXT channel but not twitter
+      t.say "text channel (#{session[:channel]})"
+    end
+
+
     if session[:data]["items"].size > 0
       t.say "Here are #{session[:data]["items"].size} opportunities. Press the opportunity number you want more information about."
       items_say = []
       session[:data]["items"].each_with_index{|item,i| items_say << "Opportunity ##{i+1} #{item["title"]}"}
       t.ask :name => 'selection', :bargein => true, :timeout => 60, :required => true, :attempts => 2,
-          :say => [{:event => "nomatch:1 nomatch:2 nomatch:3", :value => "That wasn't a one-digit opportunity number."},
-                   {:value => items_say.join(" ,, ")}],
-                    :choices => { :value => "[1 DIGITS]"}
+          :say => [{:event => "nomatch:1 nomatch:2 nomatch:3",
+                      :value => "That wasn't a one-digit opportunity number."},
+                   {:value => items_say.join(" ,, ")}], :choices => { :value => "[1 DIGITS]"}
     else
       t.say "No volunteer opportunities found in zip code. Please try calling back later. Goodbye."
     end
@@ -72,11 +83,13 @@ post '/process_selection.json' do
     t.on  :event => 'hangup', :next => '/hangup.json'
     if v[:result][:actions][:selection][:value]
       item = session[:data]["items"][v[:result][:actions][:selection][:value].to_i-1]
+      tinyurl = shorten_url(URI.unescape(item["xml_url"]))
+      
       t.say "Information about opportunity #{item["title"]} is as follows: "
       unless item["startDate"].empty? or item["endDate"].empty?
         t.say "From #{pretty_time(item["startDate"])} to #{pretty_time(item["endDate"])}"
       end
-      tinyurl = shorten_url(URI.unescape(item["xml_url"]))
+      
       if session[:channel] == "VOICE"
         t.say "Official web page: #{readable_tinyurl(tinyurl)}. Again, that's #{readable_tinyurl(tinyurl)}"
       else
