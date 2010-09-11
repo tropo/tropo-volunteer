@@ -66,7 +66,7 @@ post '/process_selection.json' do
     t.on  :event => 'error', :next => '/error.json'  
     t.on  :event => 'hangup', :next => '/hangup.json'
     if v[:result][:actions][:selection][:value]
-      item = session[:data][v[:result][:actions][:selection][:value].to_i-1]
+      item = session[:data]["items"][v[:result][:actions][:selection][:value].to_i-1]
       t.say "Information about opportunity #{item["title"]} is as follows: "
       t.say "From #{Time.parse(item["startDate"]).strftime("%a %m/%d at %I:%M %p")} to #{Time.parse(item["endDate"]).strftime("%a %m/%d at %I:%M %p")}" unless item["startDate"].empty? or item["endDate"].empty
       t.say "Contact "
