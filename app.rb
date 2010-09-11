@@ -9,7 +9,6 @@ post '/index.json' do
   session[:network] = v[:session][:to][:network].upcase
   session[:channel] = v[:session][:to][:channel].upcase
   t = Tropo::Generator.new(:voice => "kate")
-    t.on :event => 'error', :next => '/error.json'     # For fatal programming errors. Log some details so we can fix it
     t.on :event => 'hangup', :next => '/hangup.json'   # When a user hangs or call is done. We will want to log some details.
     t.on :event => 'continue', :next => '/process_zip.json'
     # t.ask(:name => 'fix', :choices => {:value => "[ANY]"}) if session[:channel] == "TEXT"
@@ -24,7 +23,6 @@ end
 post '/process_zip.json' do
   v = Tropo::Generator.parse request.env["rack.input"].read
   t = Tropo::Generator.new(:voice => "kate")
-    t.on  :event => 'error', :next => '/error.json'
     t.on  :event => 'hangup', :next => '/hangup.json'
     t.on  :event => 'continue', :next => '/process_selection.json'
   
@@ -63,7 +61,6 @@ end
 post '/process_selection.json' do
   v = Tropo::Generator.parse request.env["rack.input"].read
   t = Tropo::Generator.new
-    t.on  :event => 'error', :next => '/error.json'  
     t.on  :event => 'hangup', :next => '/hangup.json'
     if v[:result][:actions][:selection][:value]
       item = session[:data]["items"][v[:result][:actions][:selection][:value].to_i-1]
@@ -104,10 +101,4 @@ post '/hangup.json' do
   puts " Call complete. Call duration: #{v[:result][:call_duration]} second(s)"
   puts "  Caller info: ID=#{session[:caller][:id]}, Name=#{session[:caller][:name]}"
   puts "  Call logged in CDR. Tropo session ID: #{session[:id]}"
-end
-
-post '/error.json' do
-  v = Tropo::Generator.parse request.env["rack.input"].read
-  puts "!"*10 + "ERROR (see rack.input below); call ended"
-  puts v.inspect
 end
