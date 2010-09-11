@@ -13,7 +13,7 @@ post '/index.json' do
     t.on :event => 'error', :next => '/error.json'     # For fatal programming errors. Log some details so we can fix it
     t.on :event => 'hangup', :next => '/hangup.json'   # When a user hangs or call is done. We will want to log some details.
     t.on :event => 'continue', :next => '/process_zip.json'
-    t.ask(:name => 'fix', :choices => {:value => "[ANY]"}) if session[:channel] == "TEXT"
+    # t.ask(:name => 'fix', :choices => {:value => "[ANY]"}) if session[:channel] == "TEXT"
     t.ask :name => 'zip', :bargein => true, :timeout => 60, :required => true, :attempts => 4,
         :say => [{:event => "timeout", :value => "Sorry, I did not hear anything."},
                  {:event => "nomatch:1 nomatch:2 nomatch:3", :value => "That wasn't a five-digit zip code."},
@@ -74,9 +74,9 @@ post '/process_selection.json' do
       t.say "Contact "
       tinyurl = shorten_url(URI.unescape(item["xml_url"]))
       if session[:channel] == "VOICE"
-        t.say "Official web page: #{readable_url(url)}. Again, #{readable_url(url)}"
+        t.say "Official web page: #{readable_tinyurl(tinyurl)}. Again, #{readable_tinyurl(tinyurl)}"
       else
-        t.say "Official web page: #{url}"
+        t.say "Official web page: #{tinyurl}"
       end
       t.say "Description: #{item["description"]}"
       #  {
