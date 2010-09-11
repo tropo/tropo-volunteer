@@ -1,4 +1,4 @@
-%w(rubygems sinatra tropo-webapi-ruby open-uri json helpers.rb).each{|lib| require lib}
+%w(rubygems sinatra tropo-webapi-ruby open-uri json/pure helpers.rb).each{|lib| require lib}
 
 enable :sessions
 
@@ -41,7 +41,8 @@ post '/process_zip.json' do
       data = JSON.parse(open(url).read)
       pp data
       t.say "#{data["items"].size} opportunities found. I'll read them to you"
-    rescue
+    rescue => e
+      pp e # print error to sinatra console
       t.say "It looks like something went wrong with our data source. Please try again later. "
       t.hangup
     end
