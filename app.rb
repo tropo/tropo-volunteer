@@ -22,7 +22,7 @@ post '/process_zip.json' do
   v = Tropo::Generator.parse request.env["rack.input"].read
   t = Tropo::Generator.new(:voice => "kate")
     t.on  :event => 'error', :next => '/error.json'
-    t.on  :event => 'hangup', :next => '/hangup.json'
+    t.on  :event => 'hangup', :next => '/process_selection.json' #'/hangup.json'
     t.on  :event => 'continue', :next => '/process_selection.json'
     t.say v[:result][:actions][:zip][:value]
     
