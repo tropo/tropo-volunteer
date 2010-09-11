@@ -1,9 +1,12 @@
 require 'time'
 
-# Helper to take out http[s]:// so Tropo TTS doesn't try to stream the URL as if it were an audio file.
-# => Method by @Skram
-def reformat_uris(text)
-  text.gsub(/https?:\/\//, "link to ")
+def shorten_url(long_url)
+  short_url = open("http://tinyurl.com/api-create.php?url=#{long_url}").read.gsub(/https?:\/\//, "")
+end
+
+def readable_url(url)
+  unique_url = url.split("/")[1].split(//).join(",")+","
+  "tiny u r l dot com slash #{unique_url}"
 end
 
 # Helper to convert number to ordinal.

@@ -6,6 +6,8 @@ use Rack::Session::Pool
 post '/index.json' do
   v = Tropo::Generator.parse request.env["rack.input"].read
   session[:caller] = v[:session][:from][:id]
+  session[:network] = v[:session][:network]
+  session[:channel] = v[:session][:channel]
   t = Tropo::Generator.new(:voice => "kate")
     t.on :event => 'error', :next => '/error.json'     # For fatal programming errors. Log some details so we can fix it
     t.on :event => 'hangup', :next => '/hangup.json'   # When a user hangs or call is done. We will want to log some details.
@@ -63,8 +65,32 @@ post '/process_selection.json' do
   t = Tropo::Generator.new
     t.on  :event => 'error', :next => '/error.json'  
     t.on  :event => 'hangup', :next => '/hangup.json'
-    if v[:result][:actions][:selection][:value]
-      t.say "Opportunity #{v[:result][:actions][:selection][:value].to_i+1} information ..."
+    if selection = v[:result][:actions][:selection][:value]
+      item = session[:data][selection.to_i-1]
+      
+      t.say "Information about opportunity ##{selection} (#{item["title"]}) is as follows: "
+      t.say "From #{Time.parse(item["startDate"]).strftime("%a %m/%d at %I:%M %p")} to #{Time.parse(item["endDate"]).strftime("%a %m/%d at %I:%M %p")}" unless item["startDate"].empty? or item["endDate"].empty
+      t.say "Contact "
+      tinyurl = shorten_url(URI.unescape(item["xml_url"]))
+      if session[:channel] == "VOICE"
+        t.say "Official web page: #{readable_url(url)}. Again, #{readable_url(url)}"
+      else
+        t.say "Official web page: #{url}"
+      end
+      t.say "Description: #{item["description"]}"
+      #  {
+      #   "minAge": "", 
+      #   "": "2010-10-06 19:30:00", 
+      #   "contactPhone": "", 
+      #   "sponsoringOrganizationName": "Greater DC Cares", 
+      #   "contactName": "", 
+      #   "addr1": "", 
+      #   "street1": "", 
+      #   "street2": "", 
+      #   "contactEmail": "", 
+      #   "url_short": "www.greaterdccares.org", 
+      #  }, 
+      
     else
       t.say "No opportunity with that value. Please try again."
     end
