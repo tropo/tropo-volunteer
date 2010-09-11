@@ -21,8 +21,6 @@ post '/index.json' do
                    {:value => "In what zip code would you like to search for volunteer opportunities in?."}],
                     :choices => { :value => "[5 DIGITS]"}
     end
-    t.on :event => 'continue', :next => '/process_zip.json'
-    t.on :event => 'hangup', :next => '/hangup.json'              
   t.response
 end
 
@@ -52,16 +50,10 @@ post '/process_zip.json' do
       t.hangup
     end
     
-    case session[:network]
-    when ["PSTN","VOIP","SIP"]
-      t.say "VOICE network"
-    when ["TWITTER"]
+    if session[:network] == "TWITTER"
       t.say "Volunteer opportunities in your area for the next 7 days: #{tinyurl("http://www.allforgood.org/search?"+params_str)}"
       t.hangup
-    else # TEXT channel but not twitter
-      t.say "text channel (#{session[:channel]})"
     end
-
 
     if session[:data]["items"].size > 0
       t.say "Here are #{session[:data]["items"].size} opportunities. Press the opportunity number you want more information about."
