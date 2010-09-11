@@ -1,6 +1,7 @@
 require 'time'
 
 def construct_details_string(item)
+  tinyurl = shorten_url(URI.unescape(item["xml_url"]))
   details = []
   details << "From #{pretty_time(item["startDate"])} to #{pretty_time(item["endDate"])}" unless item["startDate"].empty? or item["endDate"].empty?      
   if session[:channel] == "VOICE"

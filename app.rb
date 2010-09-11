@@ -76,7 +76,6 @@ post '/process_selection.json' do
     t.on  :event => 'hangup', :next => '/hangup.json'
     if v[:result][:actions][:selection][:value]
       item = session[:data]["items"][v[:result][:actions][:selection][:value].to_i-1]
-      tinyurl = shorten_url(URI.unescape(item["xml_url"]))
       t.say "Information about opportunity #{item["title"]} is as follows: "      
       t.say "Event Details: " + construct_details_string(item)
       t.say "Description: " + item["description"] unless item["description"].empty? 
