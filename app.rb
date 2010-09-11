@@ -39,7 +39,7 @@ post '/process_zip.json' do
     t.say(url)
     begin
       data = JSON.parse(open(url).read)
-      pp data
+      puts data
       t.say "#{data["items"].size} opportunities found. I'll read them to you"
     rescue => e
       puts e # print error to sinatra console
