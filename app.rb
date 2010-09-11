@@ -25,6 +25,7 @@ post '/process_zip.json' do
     t.on  :event => 'hangup', :next => '/hangup.json'
     t.on  :event => 'continue', :next => '/process_selection.json'
     t.say v[:result][:actions][:zip][:value]
+    
     params = {
       :num => "9",
       :output => "json",
@@ -48,7 +49,7 @@ post '/process_zip.json' do
       t.say "Here are #{session[:data]["items"].size} opportunities. Press the opportunity number you want more information about."
       items_say = []
       session[:data]["items"].each_with_index{|item,i| items_say << "Opportunity ##{i+1}: #{item["title"]}"}
-      t.ask :name => 'selection', :bargein => true, :timeout => 60, :required => false, :attempts => 2,
+      t.ask :name => 'selection', :bargein => true, :timeout => 60, :required => true, :attempts => 2,
           :say => [{:event => "nomatch:1 nomatch:2 nomatch:3", :value => "That wasn't a one-digit opportunity number."},
                    {:value => items_say.join(",, ")}],
                     :choices => { :value => "[1 DIGITS]"}
