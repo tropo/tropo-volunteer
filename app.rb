@@ -1,6 +1,7 @@
 %w(rubygems sinatra tropo-webapi-ruby open-uri json/pure helpers.rb).each{|lib| require lib}
 
-enable :sessions
+use Rack::Session::Pool
+# enable :sessions
 
 post '/index.json' do
   v = Tropo::Generator.parse request.env["rack.input"].read
@@ -61,6 +62,7 @@ end
 
 post '/process_selection.json' do
   v = Tropo::Generator.parse request.env["rack.input"].read
+  puts v.inspect
   t = Tropo::Generator.new
     t.on  :event => 'error', :next => '/error.json'  
     t.on  :event => 'hangup', :next => '/hangup.json'
