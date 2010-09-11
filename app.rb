@@ -4,10 +4,10 @@ enable :sessions
 post '/index.json' do
   v = Tropo::Generator.parse request.env["rack.input"].read
   session[:caller] = v[:session][:from][:id]
-  t = Tropo::Generator.new
+  t = Tropo::Generator.new, :voice => "kate"
     t.on :event => 'error', :next => '/error.json'     # For fatal programming errors. Log some details so we can fix it
     t.on :event => 'hangup', :next => '/hangup.json'   # When a user hangs or call is done. We will want to log some details.
-    t.on :event => 'continue', :next => '/next.json'
+    t.on :event => 'continue', :next => '/process_zip.json'
     t.say "Welcome to Do-Good-by-Phone."
 
     t.ask :name => 'zip', :bargein => true, :timeout => 7, :required => true, :attempts => 4,
@@ -18,12 +18,12 @@ post '/index.json' do
   t.response
 end
 
-post '/next.json' do
+post '/process_zip.json' do
   v = Tropo::Generator.parse request.env["rack.input"].read
-  t = Tropo::Generator.new
+  t = Tropo::Generator.new, :voice => "kate"
     t.on  :event => 'error', :next => '/error.json'
     t.on  :event => 'hangup', :next => '/hangup.json'
-    t.on  :event => 'continue', :next => '/say_page_of_tweets.json'
+    t.on  :event => 'continue', :next => '/process_input.json'
     t.say v[:result][:actions][:zip][:value]
     t.hangup
   t.response  
