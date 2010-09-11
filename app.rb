@@ -13,7 +13,7 @@ post '/index.json' do
     t.ask :name => 'zip', :bargein => true, :timeout => 60, :required => true, :attempts => 4,
         :say => [{:event => "timeout", :value => "Sorry, I did not hear anything."},
                  {:event => "nomatch:1 nomatch:2 nomatch:3", :value => "That wasn't a five-digit zip code."},
-                 {:value => "In what zip code would you like to search for volunteer opportunities in?."}],
+                 {:value => "<break size='medium' /> In what zip code would you like to search for volunteer opportunities in?."}],
                   :choices => { :value => "[5 DIGITS]"}
   t.response
 end
@@ -22,7 +22,7 @@ post '/process_zip.json' do
   v = Tropo::Generator.parse request.env["rack.input"].read
   t = Tropo::Generator.new(:voice => "kate")
     t.on  :event => 'error', :next => '/error.json'
-    t.on  :event => 'hangup', :next => '/process_selection.json' #'/hangup.json'
+    t.on  :event => 'hangup', :next => '/hangup.json'
     t.on  :event => 'continue', :next => '/process_selection.json'
   
     params = {
@@ -47,10 +47,9 @@ post '/process_zip.json' do
       t.say "Here are #{session[:data]["items"].size} opportunities. Press the opportunity number you want more information about."
       items_say = []
       session[:data]["items"].each_with_index{|item,i| items_say << "Opportunity ##{i+1}: #{item["title"]}"}
-      
       t.ask :name => 'selection', :bargein => true, :timeout => 60, :required => true, :attempts => 2,
           :say => [{:event => "nomatch:1 nomatch:2 nomatch:3", :value => "That wasn't a one-digit opportunity number."},
-                   {:value => items_say.join(" , , ")}],
+                   {:value => items_say.join(" <break size='small' />, ")}],
                     :choices => { :value => "[1 DIGITS]"}
     else
       t.say "No volunteer opportunities found in zip code. Please try calling back later. Goodbye."
