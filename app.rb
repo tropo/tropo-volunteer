@@ -4,9 +4,8 @@ use Rack::Session::Pool
 
 post '/index.json' do
   v = Tropo::Generator.parse request.env["rack.input"].read
-  session[:caller] = v[:session][:from][:id]
-  session[:network] = v[:session][:to][:network].upcase
-  session[:channel] = v[:session][:to][:channel].upcase
+  session[:network] = v[:session][:to][:network]
+  session[:channel] = v[:session][:to][:channel]
   t = Tropo::Generator.new
     t.on :event => 'hangup', :next => '/hangup.json'
     t.on :event => 'continue', :next => '/process_zip.json'
@@ -40,6 +39,12 @@ post '/process_zip.json' do
       
     params_str = ""
     params.each{|key,value| params_str << "&#{key}=#{value}"}
+  
+    # If using twitter, let's just give them a URL to the website. We don't want to flood Twitter (like everyone else)
+    if session[:network] == "TWITTER"
+      t.say "Volunteer opportunities in your area for the next 7 days: #{tinyurl("http://www.allforgood.org/search?"+params_str)}"
+      t.hangup
+    end
     
     begin
       session[:data] = JSON.parse(open("http://www.allforgood.org/api/volopps?key=tropo"+params_str).read)
@@ -48,11 +53,6 @@ post '/process_zip.json' do
       t.hangup
     end
     
-    if session[:network] == "TWITTER"
-      t.say "Volunteer opportunities in your area for the next 7 days: #{tinyurl("http://www.allforgood.org/search?"+params_str)}"
-      t.hangup
-    end
-
     if session[:data]["items"].size > 0
       t.say "Here are #{session[:data]["items"].size} opportunities. Press the opportunity number you want more information about."
       items_say = []
@@ -61,7 +61,7 @@ post '/process_zip.json' do
           :say => [{:event => "nomatch:1 nomatch:2 nomatch:3", :value => "That wasn't a one-digit opportunity number."},
                    {:value => items_say.join(", ")}], :choices => { :value => "[1 DIGITS]"}
     else
-      t.say "No volunteer opportunities found in that zip code. Please try calling back later. Goodbye."
+      t.say "No volunteer opportunities found in that zip code. Please try calling back later."
     end
   t.response  
 end
@@ -75,32 +75,34 @@ post '/process_selection.json' do
       tinyurl = shorten_url(URI.unescape(item["xml_url"]))
       
       t.say "Information about opportunity #{item["title"]} is as follows: "
-      unless item["startDate"].empty? or item["endDate"].empty?
-        t.say "From #{pretty_time(item["startDate"])} to #{pretty_time(item["endDate"])}"
-      end
+      details_str = []
+      details_str << "From #{pretty_time(item["startDate"])} to #{pretty_time(item["endDate"])}" unless item["startDate"].empty? or item["endDate"].empty?
       
       if session[:channel] == "VOICE"
-        t.say "Official web page: #{readable_tinyurl(tinyurl)}. Again, that's #{readable_tinyurl(tinyurl)}"
+        details_str << "Official web page: #{readable_tinyurl(tinyurl)}. Again, that's #{readable_tinyurl(tinyurl)}"
       else
-        t.say "Official web page: #{tinyurl}"
+        details_str << "Official web page: #{tinyurl}"
       end
-      contact_info = []
-      contact_info << "Name: #{item["contactName"]}" unless item["contactName"].empty?
-      contact_info << "Phone: #{item["contactPhone"]}" unless item["contactPhone"].empty?
-      contact_info << "Email: #{item["contactEmail"]}" unless item["contactEmail"].empty?
-      contact_info << "Street: #{item["street1"]}" unless item["street1"].empty?
-      contact_info << "Street: #{item["street2"]}" unless item["street2"].empty?
-      contact_info << "Lat/Long: #{item["latlong"]}" unless item["latlong"].empty? or session[:channel] == "VOICE"
-      t.say "Contact/Location Info: #{contact_info.join(", ")}" unless contact_info.empty?
-      t.say "Description: #{item["description"]}" 
-    else
+      
+      details_str = []
+      details_str << "Name: " + item["contactName"] unless item["contactName"].empty?
+      details_str << "Phone: " + item["contactPhone"] unless item["contactPhone"].empty?
+      details_str << "Email: " + item["contactEmail"] unless item["contactEmail"].empty?
+      details_str << "Street: " + item["street1"] unless item["street1"].empty?
+      details_str << "Street: " + item["street2"] unless item["street2"].empty?
+      details_str << "Google Map: " + shorten_url("http://maps.google.com/maps?f=q&source=s_q&hl=en&geocode=&q="+item["latlong"]) unless item["latlong"].empty? or session[:channel] == "VOICE"
+      t.say "Info: " + details_str.join(", ") unless contact_info.empty?
+      t.say "Description: " + item["description"] unless item["description"].empty? 
+    else # no opportunity found
       t.say "No opportunity with that value. Please try again."
     end
+    
     if session[:channel] == "VOICE"
       t.say "That's all. Communication services donated by tropo dot com, data by all for good dot org. Have a nice day. Goodbye."
     else
       t.say "That's all. Communication services donated by http://Tropo.com; data by http://AllForGood.org"
     end
+    
     t.hangup
   t.response
 end
