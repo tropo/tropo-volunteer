@@ -9,13 +9,13 @@ post '/index.json' do
   t = Tropo::Generator.new
     t.on :event => 'hangup', :next => '/hangup.json'
     t.on :event => 'continue', :next => '/process_zip.json'
-    if v[:session][:initial_text] =~ /\d{5}/
-      t.ask :name => 'initial_text_capture', :choices => { :value => "[ANY]"}
+    if v[:session][:initial_text]
+      t.ask :name => 'initial_text', :choices => { :value => "[ANY]"}
       session[:zip] = v[:session][:initial_text]
     else
-      t.ask :name => 'zip', :bargein => true, :timeout => 60, :required => true, :attempts => 4,
+      t.ask :name => 'zip', :bargein => true, :timeout => 60, :required => true, :attempts => 2,
           :say => [{:event => "timeout", :value => "Sorry, I did not hear anything."},
-                   {:event => "nomatch:1 nomatch:2 nomatch:3", :value => "Oops, that wasn't a five-digit zip code."},
+                   {:event => "nomatch:1 nomatch:2", :value => "Oops, that wasn't a five-digit zip code."},
                    {:value => "In what zip code would you like to search for volunteer opportunities in?."}],
                     :choices => { :value => "[5 DIGITS]"}
     end
@@ -27,32 +27,36 @@ post '/process_zip.json' do
   t = Tropo::Generator.new
     t.on  :event => 'hangup', :next => '/hangup.json'
     t.on  :event => 'continue', :next => '/process_selection.json'
-
-    session[:zip] = v[:result][:actions][:zip][:value].gsub(" ","") unless session[:zip]        
+    
+    # if no intial text was captured, use the zip in response to the ask in the previous route
+    session[:zip] = v[:result][:actions][:zip][:value].gsub(" ","") unless session[:zip]
+    
+    # construct and generate the params url. this is used for generating the JSON request, or in the case of twitter, the URL to the website.
     params = {
       :num => "9",
       :output => "json",
       :vol_loc => session[:zip],
       :vol_startdate => Time.now.strftime("%Y-%m-%d"),
       :vol_enddate => (Time.now+604800).strftime("%Y-%m-%d")
-      }
-      
+      }      
     params_str = ""
     params.each{|key,value| params_str << "&#{key}=#{value}"}
   
-    # If using twitter, let's just give them a URL to the website. We don't want to flood Twitter (like everyone else)
+    # If using twitter, let's just give them a URL to the website. We don't want to flood Twitter with all the details we give voice/IM users
     if session[:network] == "TWITTER"
       t.say "Volunteer opportunities in your area for the next 7 days: #{tinyurl("http://www.allforgood.org/search?"+params_str)}"
       t.hangup
     end
-    
+
+    # Fetch JSON output for the volunter opportunities from our API provider, allforgood.org
     begin
       session[:data] = JSON.parse(open("http://www.allforgood.org/api/volopps?key=tropo"+params_str).read)
     rescue
-      t.say "It looks like something went wrong with our volunteer data source. Please try again later. Goodbye."
+      t.say "It looks like something went wrong with our volunteer data source. Please try again later."
       t.hangup
     end
     
+    # List the opportunities to the user in the form of a question. The selected opp will be handled in the next route.
     if session[:data]["items"].size > 0
       t.say "Here are #{session[:data]["items"].size} opportunities. Press the opportunity number you want more information about."
       items_say = []
@@ -61,7 +65,7 @@ post '/process_zip.json' do
           :say => [{:event => "nomatch:1 nomatch:2 nomatch:3", :value => "That wasn't a one-digit opportunity number. Here are your choices: "},
                    {:value => items_say.join(", ")}], :choices => { :value => "[1 DIGITS]"}
     else
-      t.say "No volunteer opportunities found in that zip code. Please try calling back later."
+      t.say "No volunteer opportunities found in that zip code. Please try again later."
     end
   t.response  
 end
@@ -73,25 +77,8 @@ post '/process_selection.json' do
     if v[:result][:actions][:selection][:value]
       item = session[:data]["items"][v[:result][:actions][:selection][:value].to_i-1]
       tinyurl = shorten_url(URI.unescape(item["xml_url"]))
-      
-      t.say "Information about opportunity #{item["title"]} is as follows: "
-
-      # Construct details array which will be a list of event details we say() all at once to conserve text messages
-      details = []
-      details << "From #{pretty_time(item["startDate"])} to #{pretty_time(item["endDate"])}" unless item["startDate"].empty? or item["endDate"].empty?      
-      if session[:channel] == "VOICE"
-        details << "Official web page: #{readable_tinyurl(tinyurl)}. Again, that's #{readable_tinyurl(tinyurl)}"
-      else
-        details << "Official web page: #{tinyurl}"
-      end
-      details << "Name: " + item["contactName"] unless item["contactName"].empty?
-      details << "Phone: " + item["contactPhone"] unless item["contactPhone"].empty?
-      details << "Email: " + item["contactEmail"] unless item["contactEmail"].empty?
-      details << "Street: " + item["street1"] unless item["street1"].empty?
-      details << "Street: " + item["street2"] unless item["street2"].empty?
-      details << "Google Map: " + shorten_url("http://maps.google.com/maps?f=q&source=s_q&hl=en&geocode=&q="+item["latlong"]) unless item["latlong"].empty? or session[:channel] == "VOICE"
-      
-      t.say "Event Details: " + details.join(", ")
+      t.say "Information about opportunity #{item["title"]} is as follows: "      
+      t.say "Event Details: " + construct_details_string(item)
       t.say "Description: " + item["description"] unless item["description"].empty? 
     else # no opportunity found
       t.say "No opportunity with that value. Please try again."
@@ -99,10 +86,9 @@ post '/process_selection.json' do
     
     if session[:channel] == "VOICE"
       t.say "That's all. Communication services donated by tropo dot com, data by all for good dot org. Have a nice day. Goodbye."
-    else
+    else # for text users, we can give them a URL (most clients will make the links clickable)
       t.say "That's all. Communication services donated by http://Tropo.com; data by http://AllForGood.org"
-    end
-    
+    end 
     t.hangup
   t.response
 end
