@@ -1,4 +1,4 @@
-%w(rubygems sinatra tropo-webapi-ruby open-uri json/pure helpers.rb pp).each{|lib| require lib}
+%w(rubygems sinatra tropo-webapi-ruby open-uri json/pure helpers.rb).each{|lib| require lib}
 
 use Rack::Session::Pool
 # enable :sessions
@@ -6,7 +6,6 @@ use Rack::Session::Pool
 post '/index.json' do
   v = Tropo::Generator.parse request.env["rack.input"].read
   session[:caller] = v[:session][:from][:id]
-  pp v
   session[:network] = v[:session][:to][:network].upcase
   session[:channel] = v[:session][:to][:channel].upcase
   t = Tropo::Generator.new(:voice => "kate")
@@ -50,7 +49,7 @@ post '/process_zip.json' do
     if session[:data]["items"].size > 0
       t.say "Here are #{session[:data]["items"].size} opportunities. Press the opportunity number you want more information about."
       items_say = []
-      session[:data]["items"].each_with_index{|item,i| items_say << "Opportunity ##{i+1}: #{item["title"]}"}
+      session[:data]["items"].each_with_index{|item,i| items_say << "Opportunity ##{i+1} #{item["title"]} starting in about #{Time.parse(item["startDate"]).to_pretty}"}
       t.ask :name => 'selection', :bargein => true, :timeout => 60, :required => true, :attempts => 2,
           :say => [{:event => "nomatch:1 nomatch:2 nomatch:3", :value => "That wasn't a one-digit opportunity number."},
                    {:value => items_say.join(" <break time='600ms'/>, ")}],
@@ -63,7 +62,6 @@ end
 
 post '/process_selection.json' do
   v = Tropo::Generator.parse request.env["rack.input"].read
-  puts v.inspect
   t = Tropo::Generator.new
     t.on  :event => 'error', :next => '/error.json'  
     t.on  :event => 'hangup', :next => '/hangup.json'
