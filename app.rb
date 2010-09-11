@@ -12,7 +12,7 @@ post '/index.json' do
     t.on :event => 'error', :next => '/error.json'     # For fatal programming errors. Log some details so we can fix it
     t.on :event => 'hangup', :next => '/hangup.json'   # When a user hangs or call is done. We will want to log some details.
     t.on :event => 'continue', :next => '/process_zip.json'
-    t.ask(:name => 'fix', :choices => {:value => "[ANY"]}) if session[:channel] == "TEXT"
+    t.ask(:name => 'fix', :choices => {:value => "[ANY]"}) if session[:channel] == "TEXT"
     t.ask :name => 'zip', :bargein => true, :timeout => 60, :required => true, :attempts => 4,
         :say => [{:event => "timeout", :value => "Sorry, I did not hear anything."},
                  {:event => "nomatch:1 nomatch:2 nomatch:3", :value => "That wasn't a five-digit zip code."},
