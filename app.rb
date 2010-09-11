@@ -29,7 +29,7 @@ post '/process_zip.json' do
     params = {
       :num => "10",
       :output => "json",
-      :vol_loc => v[:result][:actions][:zip][:value],
+      :vol_loc => v[:result][:actions][:zip][:value].gsub(" ",""),
       :vol_startdate => Time.now.strftime("%Y-%m-%d"),
       :vol_enddate => (Time.now+604800).strftime("%Y-%m-%d")
       }
@@ -39,6 +39,7 @@ post '/process_zip.json' do
     t.say(url)
     begin
       data = JSON.parse(open(url).read)
+      pp data
       t.say "#{data["items"].size} opportunities found. I'll read them to you"
     rescue
       t.say "It looks like something went wrong with our data source. Please try again later. "
