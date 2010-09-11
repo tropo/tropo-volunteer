@@ -98,7 +98,5 @@ end
 
 post '/hangup.json' do
   v = Tropo::Generator.parse request.env["rack.input"].read
-  puts " Call complete. Call duration: #{v[:result][:call_duration]} second(s)"
-  puts "  Caller info: ID=#{session[:caller][:id]}, Name=#{session[:caller][:name]}"
-  puts "  Call logged in CDR. Tropo session ID: #{session[:id]}"
+  puts " Call complete (CDR received). Call duration: #{v[:call][:duration]} second(s)"
 end
