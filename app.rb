@@ -12,6 +12,7 @@ post '/index.json' do
     t.on :event => 'hangup', :next => '/hangup.json'
     t.on :event => 'continue', :next => '/process_zip.json'
     if v[:session][:initial_text] =~ /\d{5}/
+      t.ask :name => 'initial_text_capture', :choices => { :value => "[ANY]"}
       session[:zip] = v[:session][:initial_text]
     else
       t.ask :name => 'zip', :bargein => true, :timeout => 60, :required => true, :attempts => 4,
