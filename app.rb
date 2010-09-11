@@ -54,8 +54,6 @@ post '/process_zip.json' do
     else
       t.say "No volunteer opportunities found in zip code. Please try calling back later. Goodbye."
     end
-        
-    t.hangup
   t.response  
 end
 
