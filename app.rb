@@ -68,26 +68,33 @@ post '/process_selection.json' do
     if v[:result][:actions][:selection][:value]
       item = session[:data]["items"][v[:result][:actions][:selection][:value].to_i-1]
       t.say "Information about opportunity #{item["title"]} is as follows: "
-      t.say "From #{Time.parse(item["startDate"]).strftime("%a %m/%d at %I:%M %p")} to #{Time.parse(item["endDate"]).strftime("%a %m/%d at %I:%M %p")}" unless item["startDate"].empty? or item["endDate"].empty?
+      # t.say "From #{Time.parse(item["startDate"]).strftime("%a %m/%d at %I:%M %p")} to #{Time.parse(item["endDate"]).strftime("%a %m/%d at %I:%M %p")}" unless item["startDate"].empty? or item["endDate"].empty?
+      unless item["startDate"].empty? or item["endDate"].empty?
+        t.say "From #{pretty_time(item["startDate"])} to #{pretty_time(item["endDate"])}"
+      end
       tinyurl = shorten_url(URI.unescape(item["xml_url"]))
       if session[:channel] == "VOICE"
         t.say "Official web page: #{readable_tinyurl(tinyurl)}. Again, that's #{readable_tinyurl(tinyurl)}"
       else
         t.say "Official web page: #{tinyurl}"
       end
-      t.say "Description: #{item["description"]}" 
       contact_info = []
       contact_info << "Name: #{item["contactName"]}" unless item["contactName"].empty?
       contact_info << "Phone: #{item["contactPhone"]}" unless item["contactPhone"].empty?
       contact_info << "Email: #{item["contactEmail"]}" unless item["contactEmail"].empty?
       contact_info << "Street: #{item["street1"]}" unless item["street1"].empty?
       contact_info << "Street: #{item["street2"]}" unless item["street2"].empty?
-      contact_info << "Lat/Long: #{item["latlong"]}" unless item["latlong"].empty?
+      contact_info << "Lat/Long: #{item["latlong"]}" unless item["latlong"].empty? or session[:channel] == "VOICE"
       t.say "Contact/Location Info: #{contact_info.join(", ")}" unless contact_info.empty?
+      t.say "Description: #{item["description"]}" 
     else
       t.say "No opportunity with that value. Please try again."
     end
-    t.say "Thank you. Communication services provided by Tropo .com, data by All For Good .com"
+    if session[:channel] == "VOICE"
+      t.say "Communication services donated by tropo dot com, data by all for good dot org."
+    else
+      t.say "Communication services donated by http://Tropo.com; data by http://AllForGood.org"
+    end
     t.hangup
   t.response
 end
