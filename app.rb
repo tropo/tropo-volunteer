@@ -53,7 +53,7 @@ post '/process_zip.json' do
     end
     
     case session[:network]
-    when ["PSTN","VOIP"]
+    when ["PSTN","VOIP","SIP"]
       t.say "VOICE network"
     when ["TWITTER"]
       t.say "Volunteer opportunities in your area for the next 7 days: #{tinyurl("http://www.allforgood.org/search?"+params_str)}"
