@@ -7,8 +7,8 @@ post '/index.json' do
   v = Tropo::Generator.parse request.env["rack.input"].read
   session[:caller] = v[:session][:from][:id]
   pp v
-  session[:network] = v[:session][:network].upcase
-  session[:channel] = v[:session][:channel].upcase
+  session[:network] = v[:session][:to][:network].upcase
+  session[:channel] = v[:session][:to][:channel].upcase
   t = Tropo::Generator.new(:voice => "kate")
     t.on :event => 'error', :next => '/error.json'     # For fatal programming errors. Log some details so we can fix it
     t.on :event => 'hangup', :next => '/hangup.json'   # When a user hangs or call is done. We will want to log some details.
