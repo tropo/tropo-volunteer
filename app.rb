@@ -29,12 +29,11 @@ post '/process_zip.json' do
   t = Tropo::Generator.new
     t.on  :event => 'hangup', :next => '/hangup.json'
     t.on  :event => 'continue', :next => '/process_selection.json'
-    session[:zip] = v[:result][:actions][:zip][:value].gsub(" ","") unless session[:zip]
-    
+
+    session[:zip] = v[:result][:actions][:zip][:value].gsub(" ","") unless session[:zip]        
     params = {
       :num => "9",
       :output => "json",
-      # :vol_loc => v[:result][:actions][:zip][:value].gsub(" ",""),
       :vol_loc => session[:zip],
       :vol_startdate => Time.now.strftime("%Y-%m-%d"),
       :vol_enddate => (Time.now+604800).strftime("%Y-%m-%d")
@@ -46,7 +45,7 @@ post '/process_zip.json' do
     begin
       session[:data] = JSON.parse(open("http://www.allforgood.org/api/volopps?key=tropo"+params_str).read)
     rescue
-      t.say "It looks like something went wrong with our data source. Please try again later. Goodbye."
+      t.say "It looks like something went wrong with our volunteer data source. Please try again later. Goodbye."
       t.hangup
     end
     
@@ -64,7 +63,7 @@ post '/process_zip.json' do
                       :value => "That wasn't a one-digit opportunity number."},
                    {:value => items_say.join(" ,, ")}], :choices => { :value => "[1 DIGITS]"}
     else
-      t.say "No volunteer opportunities found in zip code. Please try calling back later. Goodbye."
+      t.say "No volunteer opportunities found in that zip code. Please try calling back later. Goodbye."
     end
   t.response  
 end
