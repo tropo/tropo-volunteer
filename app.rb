@@ -36,13 +36,14 @@ post '/process_zip.json' do
       
     url = "http://www.allforgood.org/api/volopps?key=tropo"
     params.each{|key,value| url << "&#{key}=#{value}"}
+    t.say(url)
     begin
       data = JSON.parse(open(url).read)
+      t.say "#{data["items"].size} opportunities found. I'll read them to you"
     rescue
       t.say "It looks like something went wrong with our data source. Please try again later. "
       t.hangup
     end
-    t.say "#{data["items"].size} opportunities found. I'll read them to you"
     t.hangup
   t.response  
 end
