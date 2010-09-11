@@ -42,7 +42,7 @@ post '/process_zip.json' do
       pp data
       t.say "#{data["items"].size} opportunities found. I'll read them to you"
     rescue => e
-      pp e # print error to sinatra console
+      puts e # print error to sinatra console
       t.say "It looks like something went wrong with our data source. Please try again later. "
       t.hangup
     end
