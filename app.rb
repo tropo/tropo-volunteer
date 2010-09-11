@@ -52,7 +52,7 @@ post '/process_zip.json' do
       t.hangup
     end
     
-    case session[:channel]
+    case session[:network]
     when ["PSTN","VOIP"]
       t.say "VOICE network"
     when ["TWITTER"]
@@ -108,9 +108,9 @@ post '/process_selection.json' do
       t.say "No opportunity with that value. Please try again."
     end
     if session[:channel] == "VOICE"
-      t.say "Communication services donated by tropo dot com, data by all for good dot org."
+      t.say "That's all. Communication services donated by tropo dot com, data by all for good dot org. Have a nice day. Goodbye."
     else
-      t.say "Communication services donated by http://Tropo.com; data by http://AllForGood.org"
+      t.say "That's all. Communication services donated by http://Tropo.com; data by http://AllForGood.org"
     end
     t.hangup
   t.response
