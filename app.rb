@@ -1,4 +1,4 @@
-%w(rubygems sinatra tropo-webapi-ruby open-uri json/pure helpers.rb).each{|lib| require lib}
+%w(rubygems sinatra tropo-webapi-ruby open-uri json/pure helpers.rb pp).each{|lib| require lib}
 
 use Rack::Session::Pool
 # enable :sessions
@@ -6,6 +6,7 @@ use Rack::Session::Pool
 post '/index.json' do
   v = Tropo::Generator.parse request.env["rack.input"].read
   session[:caller] = v[:session][:from][:id]
+  pp v
   session[:network] = v[:session][:network].upcase
   session[:channel] = v[:session][:channel].upcase
   t = Tropo::Generator.new(:voice => "kate")
