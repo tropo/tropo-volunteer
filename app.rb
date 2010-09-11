@@ -8,28 +8,35 @@ post '/index.json' do
   session[:caller] = v[:session][:from][:id]
   session[:network] = v[:session][:to][:network].upcase
   session[:channel] = v[:session][:to][:channel].upcase
-  t = Tropo::Generator.new(:voice => "kate")
-    t.on :event => 'hangup', :next => '/hangup.json'   # When a user hangs or call is done. We will want to log some details.
+  t = Tropo::Generator.new
+    t.on :event => 'hangup', :next => '/hangup.json'
     t.on :event => 'continue', :next => '/process_zip.json'
-    # t.ask(:name => 'fix', :choices => {:value => "[ANY]"}) if session[:channel] == "TEXT"
-    t.ask :name => 'zip', :bargein => true, :timeout => 60, :required => true, :attempts => 4,
-        :say => [{:event => "timeout", :value => "Sorry, I did not hear anything."},
-                 {:event => "nomatch:1 nomatch:2 nomatch:3", :value => "That wasn't a five-digit zip code."},
-                 {:value => "In what zip code would you like to search for volunteer opportunities in?."}],
-                  :choices => { :value => "[5 DIGITS]"}
+    if v[:session][:initial_text] =~ /\d{5}/
+      session[:zip] = v[:session][:initial_text]
+    else
+      t.ask :name => 'zip', :bargein => true, :timeout => 60, :required => true, :attempts => 4,
+          :say => [{:event => "timeout", :value => "Sorry, I did not hear anything."},
+                   {:event => "nomatch:1 nomatch:2 nomatch:3", :value => "That wasn't a five-digit zip code."},
+                   {:value => "In what zip code would you like to search for volunteer opportunities in?."}],
+                    :choices => { :value => "[5 DIGITS]"}
+    end
+    t.on :event => 'continue', :next => '/process_zip.json'
+    t.on :event => 'hangup', :next => '/hangup.json'              
   t.response
 end
 
 post '/process_zip.json' do
   v = Tropo::Generator.parse request.env["rack.input"].read
-  t = Tropo::Generator.new(:voice => "kate")
+  t = Tropo::Generator.new
     t.on  :event => 'hangup', :next => '/hangup.json'
     t.on  :event => 'continue', :next => '/process_selection.json'
-  
+    session[:zip] = v[:result][:actions][:zip][:value].gsub(" ","") unless session[:zip]
+    
     params = {
       :num => "9",
       :output => "json",
-      :vol_loc => v[:result][:actions][:zip][:value].gsub(" ",""),
+      # :vol_loc => v[:result][:actions][:zip][:value].gsub(" ",""),
+      :vol_loc => session[:zip],
       :vol_startdate => Time.now.strftime("%Y-%m-%d"),
       :vol_enddate => (Time.now+604800).strftime("%Y-%m-%d")
       }
@@ -50,7 +57,7 @@ post '/process_zip.json' do
       session[:data]["items"].each_with_index{|item,i| items_say << "Opportunity ##{i+1} #{item["title"]}"}
       t.ask :name => 'selection', :bargein => true, :timeout => 60, :required => true, :attempts => 2,
           :say => [{:event => "nomatch:1 nomatch:2 nomatch:3", :value => "That wasn't a one-digit opportunity number."},
-                   {:value => items_say.join(" <break time='600ms'/>, ")}],
+                   {:value => items_say.join(" ,, ")}],
                     :choices => { :value => "[1 DIGITS]"}
     else
       t.say "No volunteer opportunities found in zip code. Please try calling back later. Goodbye."
@@ -65,7 +72,6 @@ post '/process_selection.json' do
     if v[:result][:actions][:selection][:value]
       item = session[:data]["items"][v[:result][:actions][:selection][:value].to_i-1]
       t.say "Information about opportunity #{item["title"]} is as follows: "
-      # t.say "From #{Time.parse(item["startDate"]).strftime("%a %m/%d at %I:%M %p")} to #{Time.parse(item["endDate"]).strftime("%a %m/%d at %I:%M %p")}" unless item["startDate"].empty? or item["endDate"].empty?
       unless item["startDate"].empty? or item["endDate"].empty?
         t.say "From #{pretty_time(item["startDate"])} to #{pretty_time(item["endDate"])}"
       end
