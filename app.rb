@@ -96,3 +96,21 @@ post '/hangup.json' do
   v = Tropo::Generator.parse request.env["rack.input"].read
   puts " Call complete (CDR received). Call duration: #{v[:call][:duration]} second(s)"
 end
+
+get '/' do
+  "
+  <html>
+    <head><title>Tropo Example App: Volunteer Opportunities by Phone</title></head>
+    <body>
+      <h2><em><a href='http://tropo.com/'>Tropo</a> + <a href='http://sinatrarb.com/'>Sinatra</a> + <a href='http://heroku.com'>Heroku</a> = Easy Ruby Communication Apps</em></h2>
+      <h3>Steps to recreate</h3>
+        <ol>
+          <li>Sign up for a Tropo and Heroku Account</li>
+          <li>Clone this application from Github and start up your Heroku app</li>
+          <li>Create a Tropo application to point to your new Heroku app</li>
+        </ol>
+        <p>That's all!</p>
+    </body>
+  </html>
+  "
+end
