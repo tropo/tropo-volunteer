@@ -15,7 +15,7 @@ post '/index.json' do
     t.ask :name => 'zip', :bargein => true, :timeout => 60, :required => true, :attempts => 4,
         :say => [{:event => "timeout", :value => "Sorry, I did not hear anything."},
                  {:event => "nomatch:1 nomatch:2 nomatch:3", :value => "That wasn't a five-digit zip code."},
-                 {:value => "<break time='2s'/> In what zip code would you like to search for volunteer opportunities in?."}],
+                 {:value => "In what zip code would you like to search for volunteer opportunities in?."}],
                   :choices => { :value => "[5 DIGITS]"}
   t.response
 end
