@@ -1,7 +1,6 @@
 %w(rubygems sinatra tropo-webapi-ruby open-uri json/pure helpers.rb).each{|lib| require lib}
 
 use Rack::Session::Pool
-# enable :sessions
 
 post '/index.json' do
   v = Tropo::Generator.parse request.env["rack.input"].read
@@ -59,9 +58,8 @@ post '/process_zip.json' do
       items_say = []
       session[:data]["items"].each_with_index{|item,i| items_say << "Opportunity ##{i+1} #{item["title"]}"}
       t.ask :name => 'selection', :bargein => true, :timeout => 60, :required => true, :attempts => 2,
-          :say => [{:event => "nomatch:1 nomatch:2 nomatch:3",
-                      :value => "That wasn't a one-digit opportunity number."},
-                   {:value => items_say.join(" ,, ")}], :choices => { :value => "[1 DIGITS]"}
+          :say => [{:event => "nomatch:1 nomatch:2 nomatch:3", :value => "That wasn't a one-digit opportunity number."},
+                   {:value => items_say.join(", ")}], :choices => { :value => "[1 DIGITS]"}
     else
       t.say "No volunteer opportunities found in that zip code. Please try calling back later. Goodbye."
     end
