@@ -49,7 +49,7 @@ post '/process_zip.json' do
     if session[:data]["items"].size > 0
       t.say "Here are #{session[:data]["items"].size} opportunities. Press the opportunity number you want more information about."
       items_say = []
-      session[:data]["items"].each_with_index{|item,i| items_say << "Opportunity ##{i+1} #{item["title"]} starting in about #{Time.parse(item["startDate"]).to_pretty}"}
+      session[:data]["items"].each_with_index{|item,i| items_say << "Opportunity ##{i+1} #{item["title"]}"}
       t.ask :name => 'selection', :bargein => true, :timeout => 60, :required => true, :attempts => 2,
           :say => [{:event => "nomatch:1 nomatch:2 nomatch:3", :value => "That wasn't a one-digit opportunity number."},
                    {:value => items_say.join(" <break time='600ms'/>, ")}],
@@ -69,30 +69,25 @@ post '/process_selection.json' do
       item = session[:data]["items"][v[:result][:actions][:selection][:value].to_i-1]
       t.say "Information about opportunity #{item["title"]} is as follows: "
       t.say "From #{Time.parse(item["startDate"]).strftime("%a %m/%d at %I:%M %p")} to #{Time.parse(item["endDate"]).strftime("%a %m/%d at %I:%M %p")}" unless item["startDate"].empty? or item["endDate"].empty?
-      t.say "Contact "
       tinyurl = shorten_url(URI.unescape(item["xml_url"]))
       if session[:channel] == "VOICE"
-        t.say "Official web page: #{readable_tinyurl(tinyurl)}. Again, #{readable_tinyurl(tinyurl)}"
+        t.say "Official web page: #{readable_tinyurl(tinyurl)}. Again, that's #{readable_tinyurl(tinyurl)}"
       else
         t.say "Official web page: #{tinyurl}"
       end
-      t.say "Description: #{item["description"]}"
-      #  {
-      #   "minAge": "", 
-      #   "": "2010-10-06 19:30:00", 
-      #   "contactPhone": "", 
-      #   "sponsoringOrganizationName": "Greater DC Cares", 
-      #   "contactName": "", 
-      #   "addr1": "", 
-      #   "street1": "", 
-      #   "street2": "", 
-      #   "contactEmail": "", 
-      #   "url_short": "www.greaterdccares.org", 
-      #  }, 
-      
+      t.say "Description: #{item["description"]}" 
+      contact_info = []
+      contact_info << "Name: #{item["contactName"]}" unless item["contactName"].empty?
+      contact_info << "Phone: #{item["contactPhone"]}" unless item["contactPhone"].empty?
+      contact_info << "Email: #{item["contactEmail"]}" unless item["contactEmail"].empty?
+      contact_info << "Street: #{item["street1"]}" unless item["street1"].empty?
+      contact_info << "Street: #{item["street2"]}" unless item["street2"].empty?
+      contact_info << "Lat/Long: #{item["latlong"]}" unless item["latlong"].empty?
+      t.say "Contact/Location Info: #{contact_info.join(", ")}" unless contact_info.empty?
     else
       t.say "No opportunity with that value. Please try again."
     end
+    t.say "Thank you. Communication services provided by Tropo .com, data by All For Good .com"
     t.hangup
   t.response
 end
