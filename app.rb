@@ -13,7 +13,7 @@ post '/index.json' do
     t.ask :name => 'zip', :bargein => true, :timeout => 60, :required => true, :attempts => 4,
         :say => [{:event => "timeout", :value => "Sorry, I did not hear anything."},
                  {:event => "nomatch:1 nomatch:2 nomatch:3", :value => "That wasn't a five-digit zip code."},
-                 {:value => "<break size='medium' /> In what zip code would you like to search for volunteer opportunities in?."}],
+                 {:value => "<break time='2s'/> In what zip code would you like to search for volunteer opportunities in?."}],
                   :choices => { :value => "[5 DIGITS]"}
   t.response
 end
@@ -49,7 +49,7 @@ post '/process_zip.json' do
       session[:data]["items"].each_with_index{|item,i| items_say << "Opportunity ##{i+1}: #{item["title"]}"}
       t.ask :name => 'selection', :bargein => true, :timeout => 60, :required => true, :attempts => 2,
           :say => [{:event => "nomatch:1 nomatch:2 nomatch:3", :value => "That wasn't a one-digit opportunity number."},
-                   {:value => items_say.join(" <break size='small' />, ")}],
+                   {:value => items_say.join(" <break time='600ms'/>, ")}],
                     :choices => { :value => "[1 DIGITS]"}
     else
       t.say "No volunteer opportunities found in zip code. Please try calling back later. Goodbye."
