@@ -108,8 +108,8 @@ get '/' do
           <li>Sign up for a Tropo and Heroku Account</li>
           <li>Clone this application from Github and start up your Heroku app</li>
           <li>Create a Tropo application to point to your new Heroku app</li>
+          <li>There is no step four!</li>
         </ol>
-        <p>That's all!</p>
     </body>
   </html>
   "
