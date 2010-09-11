@@ -28,5 +28,5 @@ def readable_tinyurl(url)
 end
 
 def pretty_time(input)
-  Time.parse(input).strftime("%a %m/%d at %I:%M %p")
+  Time.parse(input).strftime("%A %B %d at %I:%M %p")
 end
