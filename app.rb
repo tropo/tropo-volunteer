@@ -46,11 +46,12 @@ post '/process_zip.json' do
     if session[:data]["items"].size > 0
       t.say "Here are #{session[:data]["items"].size} opportunities. Press the opportunity number you want more information about."
       session[:data]["items"].each_with_index do |item,i|
-        t.ask :name => 'selection', :bargein => true, :timeout => 60, :required => false, :attempts => 2,
-            :say => [{:event => "nomatch:1 nomatch:2 nomatch:3", :value => "That wasn't a one-digit opportunity number."},
-                     {:value => "Opportunity #{i}: #{item["title"]}"}],
-                      :choices => { :value => "[1 DIGITS]"}
+        items_say_string = """Opportunity #{i}: #{item["title"]}"
       end
+      t.ask :name => 'selection', :bargein => true, :timeout => 60, :required => false, :attempts => 2,
+          :say => [{:event => "nomatch:1 nomatch:2 nomatch:3", :value => "That wasn't a one-digit opportunity number."},
+                   {:value => ""}],
+                    :choices => { :value => "[1 DIGITS]"}
     else
       t.say "No volunteer opportunities found in zip code. Please try calling back later. Goodbye."
     end
