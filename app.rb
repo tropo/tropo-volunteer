@@ -1,4 +1,5 @@
-%w(rubygems sinatra tropo-webapi-ruby pp open-uri json goodies.rb).each{|lib| require lib}
+%w(rubygems sinatra tropo-webapi-ruby open-uri json helpers.rb).each{|lib| require lib}
+
 enable :sessions
 
 post '/index.json' do
@@ -8,7 +9,7 @@ post '/index.json' do
     t.on :event => 'error', :next => '/error.json'     # For fatal programming errors. Log some details so we can fix it
     t.on :event => 'hangup', :next => '/hangup.json'   # When a user hangs or call is done. We will want to log some details.
     t.on :event => 'continue', :next => '/process_zip.json'
-    t.say "Welcome to Do-Good-by-Phone."
+    t.say "Well hello there."
 
     t.ask :name => 'zip', :bargein => true, :timeout => 7, :required => true, :attempts => 4,
         :say => [{:event => "timeout", :value => "Sorry, I did not hear anything."},
@@ -25,6 +26,23 @@ post '/process_zip.json' do
     t.on  :event => 'hangup', :next => '/hangup.json'
     t.on  :event => 'continue', :next => '/process_input.json'
     t.say v[:result][:actions][:zip][:value]
+    params = {
+      :num => "10",
+      :output => "json",
+      :vol_loc => v[:result][:actions][:zip][:value],
+      :vol_startdate => Time.now.strftime("%Y-%m-%d"),
+      :vol_enddate => (Time.now+604800).strftime("%Y-%m-%d")
+      }
+      
+    url = "http://www.allforgood.org/api/volopps?key=tropo"
+    params.each{|key,value| url << "&#{key}=#{value}"}
+    begin
+      data = JSON.parse(open(url).read)
+    rescue
+      t.say "It looks like something went wrong with our data source. Please try again later. "
+      t.hangup
+    end
+    t.say "#{data["items"].size} opportunities found. I'll read them to you"
     t.hangup
   t.response  
 end
@@ -57,5 +75,5 @@ end
 post '/error.json' do
   v = Tropo::Generator.parse request.env["rack.input"].read
   puts "!"*10 + "ERROR (see rack.input below); call ended"
-  pp v # Print the JSON to our Sinatra console/log so we can find the error
+  puts v.inspect
 end
