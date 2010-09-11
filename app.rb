@@ -58,7 +58,7 @@ post '/process_zip.json' do
       items_say = []
       session[:data]["items"].each_with_index{|item,i| items_say << "Opportunity ##{i+1} #{item["title"]}"}
       t.ask :name => 'selection', :bargein => true, :timeout => 60, :required => true, :attempts => 2,
-          :say => [{:event => "nomatch:1 nomatch:2 nomatch:3", :value => "That wasn't a one-digit opportunity number."},
+          :say => [{:event => "nomatch:1 nomatch:2 nomatch:3", :value => "That wasn't a one-digit opportunity number. Here are your choices: "},
                    {:value => items_say.join(", ")}], :choices => { :value => "[1 DIGITS]"}
     else
       t.say "No volunteer opportunities found in that zip code. Please try calling back later."
@@ -76,23 +76,22 @@ post '/process_selection.json' do
       
       t.say "Information about opportunity #{item["title"]} is as follows: "
 
-      # Construct details_string which will be a list of event details we say() all at once to conserve text messages
-      details_str = []
-      details_str << "From #{pretty_time(item["startDate"])} to #{pretty_time(item["endDate"])}" unless item["startDate"].empty? or item["endDate"].empty?      
+      # Construct details array which will be a list of event details we say() all at once to conserve text messages
+      details = []
+      details << "From #{pretty_time(item["startDate"])} to #{pretty_time(item["endDate"])}" unless item["startDate"].empty? or item["endDate"].empty?      
       if session[:channel] == "VOICE"
-        details_str << "Official web page: #{readable_tinyurl(tinyurl)}. Again, that's #{readable_tinyurl(tinyurl)}"
+        details << "Official web page: #{readable_tinyurl(tinyurl)}. Again, that's #{readable_tinyurl(tinyurl)}"
       else
-        details_str << "Official web page: #{tinyurl}"
+        details << "Official web page: #{tinyurl}"
       end
-      details_str = []
-      details_str << "Name: " + item["contactName"] unless item["contactName"].empty?
-      details_str << "Phone: " + item["contactPhone"] unless item["contactPhone"].empty?
-      details_str << "Email: " + item["contactEmail"] unless item["contactEmail"].empty?
-      details_str << "Street: " + item["street1"] unless item["street1"].empty?
-      details_str << "Street: " + item["street2"] unless item["street2"].empty?
-      details_str << "Google Map: " + shorten_url("http://maps.google.com/maps?f=q&source=s_q&hl=en&geocode=&q="+item["latlong"]) unless item["latlong"].empty? or session[:channel] == "VOICE"
+      details << "Name: " + item["contactName"] unless item["contactName"].empty?
+      details << "Phone: " + item["contactPhone"] unless item["contactPhone"].empty?
+      details << "Email: " + item["contactEmail"] unless item["contactEmail"].empty?
+      details << "Street: " + item["street1"] unless item["street1"].empty?
+      details << "Street: " + item["street2"] unless item["street2"].empty?
+      details << "Google Map: " + shorten_url("http://maps.google.com/maps?f=q&source=s_q&hl=en&geocode=&q="+item["latlong"]) unless item["latlong"].empty? or session[:channel] == "VOICE"
       
-      t.say "Event Details: " + details_str.join(", ")
+      t.say "Event Details: " + details.join(", ")
       t.say "Description: " + item["description"] unless item["description"].empty? 
     else # no opportunity found
       t.say "No opportunity with that value. Please try again."
