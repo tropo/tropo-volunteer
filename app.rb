@@ -64,7 +64,9 @@ post '/process_selection.json' do
     t.on  :event => 'error', :next => '/error.json'  
     t.on  :event => 'hangup', :next => '/hangup.json'
     if v[:result][:actions][:selection][:value]
-      t.say "Opportunity #{v[:result][:actions][:zip][:value].to_i+1} information ..."
+      t.say "Opportunity #{v[:result][:actions][:selection][:value].to_i+1} information ..."
+    else
+      t.say "No opportunity with that value. Please try again."
     end
     t.hangup
   t.response
