@@ -24,8 +24,7 @@ post '/process_zip.json' do
     t.on  :event => 'error', :next => '/error.json'
     t.on  :event => 'hangup', :next => '/process_selection.json' #'/hangup.json'
     t.on  :event => 'continue', :next => '/process_selection.json'
-    t.say v[:result][:actions][:zip][:value]
-    
+  
     params = {
       :num => "9",
       :output => "json",
