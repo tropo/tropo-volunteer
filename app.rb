@@ -45,8 +45,8 @@ post '/process_zip.json' do
     
     if session[:data]["items"].size > 0
       t.say "Here are #{session[:data]["items"].size} opportunities. Press the opportunity number you want more information about."
-      items_say_string = []
-      session[:data]["items"].each_with_index{|item,i| items_say_string << "Opportunity ##{i+1}: #{item["title"]}"}
+      items_say = []
+      session[:data]["items"].each_with_index{|item,i| items_say << "Opportunity ##{i+1}: #{item["title"]}"}
       t.ask :name => 'selection', :bargein => true, :timeout => 60, :required => false, :attempts => 2,
           :say => [{:event => "nomatch:1 nomatch:2 nomatch:3", :value => "That wasn't a one-digit opportunity number."},
                    {:value => items_say.join(",, ")}],
