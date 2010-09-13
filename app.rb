@@ -94,7 +94,7 @@ end
 post '/send_text_message.json' do
   v = Tropo::Generator.parse request.env["rack.input"].read
   t = Tropo::Generator.new
-    unless v[:result][:actions][:number_to_text][:value].nil? # they've told a phone # to texxt message
+    if v[:result][:actions][:number_to_text] # they've told a phone # to texxt message
       t.message({
         :to => v[:result][:actions][:number][:value],
         :network => "SMS",
