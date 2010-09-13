@@ -81,9 +81,9 @@ post '/process_selection.json' do
       t.message({
         :to => session[:from][:id],
         :network => session[:from][:network],
-        :channel => session[:from][:channel]}) do
-        t.say :value => "#{item["title"]} (testing sending a message)"
-      end
+        :channel => session[:from][:channel]},:say => {:value => "Test"}) #do
+        # t.say :value => "#{item["title"]} (testing sending a message)"
+      # end
             
       t.say "Information about opportunity #{item["title"]} is as follows: "      
       t.say "Event Details: " + construct_details_string(item)
