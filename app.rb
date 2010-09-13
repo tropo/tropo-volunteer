@@ -2,16 +2,31 @@
 
 use Rack::Session::Pool
 
+# Resource called by the Tropo WebAPI URL setting http://skitch.com/jsgoecke/dsqew/tropo.com
 post '/index.json' do
+  # Fetch the HTTP Body (the session) of the POST and parse it into a native Ruby Hash object
   v = Tropo::Generator.parse request.env["rack.input"].read
+  
+  # Fetching certain variables from the resulting Ruby Hash of the session details
+  # into Sinatra/HTTP sessions, this may then be used in the subsequent calls to the
+  # Sinatra application
   session[:from] = v[:session][:from]
   session[:network] = v[:session][:to][:network]
   session[:channel] = v[:session][:to][:channel]
+  
+  # Create a Tropo::Generator object, that is used to build the resulting JSON response
   t = Tropo::Generator.new
+    # If there is Inital Text available, we now this is an IM/SMS/Twitter session, and 
+    # not voice
     if v[:session][:initial_text]
+      # Add an 'ask' WebAPI method to the JSON resopnse with appropriate options
       t.ask :name => 'initial_text', :choices => { :value => "[ANY]"}
+      # Set a session variable with the Zip the user sent when they sent the IM/SMS/Twitter 
+      # Request
       session[:zip] = v[:session][:initial_text]
     else
+      # If this is a voice session, then add an ask to the JSON response that is voice oriented
+      # with the appropriate options
       t.ask :name => 'zip', :bargein => true, :timeout => 60, :required => true, :attempts => 2,
           :say => [{:event => "timeout", :value => "Sorry, I did not hear anything."},
                    {:event => "nomatch:1 nomatch:2", :value => "Oops, that wasn't a five-digit zip code."},
@@ -19,13 +34,22 @@ post '/index.json' do
                     :choices => { :value => "[5 DIGITS]"}
     end      
     
+    # Add an 'on' to the JSON reponse, set which resource to go to if a Hangup event occurs on Tropo
     t.on :event => 'hangup', :next => '/hangup.json'
+    # Add an 'on' to the JSON reponse, set which resource to go when the 'ask' is done executing
     t.on :event => 'continue', :next => '/process_zip.json'
+  
+  # Return the JSON response via HTTP to Tropo
   t.response
 end
 
+# This is the resource that the next step in the session is posted to when the 'ask' is completed 
+# in 'index.json'
 post '/process_zip.json' do
+  # Fetch the HTTP Body (the session) of the POST and parse it into a native Ruby Hash object
   v = Tropo::Generator.parse request.env["rack.input"].read
+  
+  # Create a Tropo::Generator object, that is used to build the resulting JSON response
   t = Tropo::Generator.new
     # if no intial text was captured, use the zip in response to the ask in the previous route
     session[:zip] = v[:result][:actions][:zip][:value].gsub(" ","") unless session[:zip]
@@ -41,30 +65,40 @@ post '/process_zip.json' do
     params.each{|key,value| params_str << "&#{key}=#{value}"}
     # If using twitter, let's just give them a URL to the website. We don't want to flood Twitter with all the details we give voice/IM users
     if session[:network] == "TWITTER"
+      # Add a 'say' to the JSON response
       t.say "Volunteer opportunities in your area for the next 7 days: #{tinyurl("http://www.allforgood.org/search?"+params_str)}"
+      # Add a 'hangup' to the JSON response
       t.hangup
     end
     # Fetch JSON output for the volunter opportunities from our API provider, allforgood.org
     begin
       session[:data] = JSON.parse(open("http://www.allforgood.org/api/volopps?key=tropo"+params_str).read)
     rescue
+      # Add a 'say' to the JSON response
       t.say "It looks like something went wrong with our volunteer data source. Please try again later."
       t.hangup
     end
     # List the opportunities to the user in the form of a question. The selected opp will be handled in the next route.
     if session[:data]["items"].size > 0
+      # Add a 'say' to the JSON response
       t.say "Here are #{session[:data]["items"].size} opportunities. Press the opportunity number you want more information about."
       items_say = []
       session[:data]["items"].each_with_index{|item,i| items_say << "Opportunity ##{i+1} #{item["title"]}"}
+      # Add an 'ask' to the JSON response
       t.ask :name => 'selection', :bargein => true, :timeout => 60, :required => true, :attempts => 1,
           :say => [{:event => "nomatch:1", :value => "That wasn't a one-digit opportunity number. Here are your choices: "},
                    {:value => items_say.join(", ")}], :choices => { :value => "[1 DIGITS]"}
     else
+      # Add a 'say' to the JSON response
       t.say "No volunteer opportunities found in that zip code. Please try again later."
     end
     
-    t.on  :event => 'continue', :next => '/process_selection.json'    
+    # Add an 'on' to the JSON reponse, set which resource to go when the 'ask' is done executing
+    t.on  :event => 'continue', :next => '/process_selection.json'
+    # Add an 'on' to the JSON reponse, set which resource to go to if a Hangup event occurs on Tropo
     t.on  :event => 'hangup', :next => '/hangup.json'
+    
+  # Return the JSON response via HTTP to Tropo
   t.response  
 end
 
