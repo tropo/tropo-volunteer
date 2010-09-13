@@ -8,8 +8,6 @@ post '/index.json' do
   session[:network] = v[:session][:to][:network]
   session[:channel] = v[:session][:to][:channel]
   t = Tropo::Generator.new
-    t.on :event => 'hangup', :next => '/hangup.json'
-    t.on :event => 'continue', :next => '/process_zip.json'
     if v[:session][:initial_text]
       t.ask :name => 'initial_text', :choices => { :value => "[ANY]"}
       session[:zip] = v[:session][:initial_text]
@@ -20,15 +18,14 @@ post '/index.json' do
                    {:value => "In what zip code would you like to search for volunteer opportunities in?."}],
                     :choices => { :value => "[5 DIGITS]"}
     end      
+    t.on :event => 'hangup', :next => '/hangup.json'
+    t.on :event => 'continue', :next => '/process_zip.json'
   t.response
 end
 
 post '/process_zip.json' do
   v = Tropo::Generator.parse request.env["rack.input"].read
   t = Tropo::Generator.new
-    t.on  :event => 'hangup', :next => '/hangup.json'
-    t.on  :event => 'continue', :next => '/process_selection.json'
-    
     # if no intial text was captured, use the zip in response to the ask in the previous route
     session[:zip] = v[:result][:actions][:zip][:value].gsub(" ","") unless session[:zip]
     
@@ -68,37 +65,67 @@ post '/process_zip.json' do
     else
       t.say "No volunteer opportunities found in that zip code. Please try again later."
     end
+    t.on  :event => 'hangup', :next => '/hangup.json'
+    t.on  :event => 'continue', :next => '/process_selection.json'    
   t.response  
 end
 
 post '/process_selection.json' do
   v = Tropo::Generator.parse request.env["rack.input"].read
   t = Tropo::Generator.new
-    t.on  :event => 'hangup', :next => '/hangup.json'
     if v[:result][:actions][:selection][:value]
       item = session[:data]["items"][v[:result][:actions][:selection][:value].to_i-1]
-      
       t.say "Information about opportunity #{item["title"]} is as follows: "      
       t.say "Event Details: " + construct_details_string(item)
-      t.say "Description: #{item["description"]}. End of description. " unless item["description"].empty? 
-
-      t.message({
-        :to => "15128267004",
-        :network => "SMS",
-        # :channel => session[:from][:channel],
-        :say => {:value => "Test message"}})
-      
-      
+      t.say "Description: #{item["description"]}. End of description. " unless item["description"].empty?       
+      t.ask :name => 'send_sms', :bargein => true, :timeout => 60, :required => true, :attempts => 1,
+            :say => [{:event => "nomatch:1", :value => "That wasn't a valid answer. "},
+                   {:value => "Would you like to have a text message sent to you?
+                               Press or say 1 to get a text message, or press or say 'no' to conclude this session."}],
+            :choices => { :value => "true(1,yes), false(2,no)"}
     else # no opportunity found
       t.say "No opportunity with that value. Please try again."
     end
+    t.on  :event => 'continue', :next => '/send_text_message.json'
+    t.on  :event => 'hangup', :next => '/hangup.json'
+  t.response
+end
+
+post '/send_text_message.json' do
+  v = Tropo::Generator.parse request.env["rack.input"].read
+  t = Tropo::Generator.new
+    if v[:result][:actions][:number_to_text][:value] # they've told a phone # to texxt message
+      t.message({
+        :to => v[:result][:actions][:number][:value],
+        :network => "SMS",
+        :say => {:value => "info details"}})
+    else # we dont have a number, so either ask for it if they want to send a text message, or send to goodbye.json
+      if v[:result][:actions][:send_sms][:value] == "true"
+        t.ask :name => 'number_to_text', :bargein => true, :timeout => 60, :required => false, :attempts => 2,
+              :say => [{:event => "timeout", :value => "Sorry, I did not hear anything."},
+                     {:event => "nomatch:1 nomatch:2", :value => "Oops, that wasn't a 10-digit number."},
+                     {:value => "What 10-digit phone number would you like to send the information to?"}],
+                      :choices => { :value => "[10 DIGITS]"}
+        next_url = '/send_text_message.json'
+      end # no need for an else, send them off to /goodbye.json
+    end
     
+    next_url = '/goodbye.json' if next_url.nil?
+    t.on  :event => 'continue', :next => next_url
+    t.on  :event => 'hangup', :next => '/hangup.json'
+  t.response
+end
+
+post '/goodbye.json' do
+  v = Tropo::Generator.parse request.env["rack.input"].read
+  t = Tropo::Generator.new
     if session[:channel] == "VOICE"
       t.say "That's all. Communication services donated by tropo dot com, data by all for good dot org. Have a nice day. Goodbye."
     else # for text users, we can give them a URL (most clients will make the links clickable)
       t.say "That's all. Communication services donated by http://Tropo.com; data by http://AllForGood.org"
     end 
     t.hangup
+  t.on  :event => 'hangup', :next => '/hangup.json'
   t.response
 end
 
