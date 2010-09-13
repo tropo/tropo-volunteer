@@ -4,6 +4,7 @@ use Rack::Session::Pool
 
 post '/index.json' do
   v = Tropo::Generator.parse request.env["rack.input"].read
+  session[:from] = v[:session][:from]
   session[:network] = v[:session][:to][:network]
   session[:channel] = v[:session][:to][:channel]
   t = Tropo::Generator.new
@@ -18,7 +19,7 @@ post '/index.json' do
                    {:event => "nomatch:1 nomatch:2", :value => "Oops, that wasn't a five-digit zip code."},
                    {:value => "In what zip code would you like to search for volunteer opportunities in?."}],
                     :choices => { :value => "[5 DIGITS]"}
-    end
+    end      
   t.response
 end
 
@@ -61,8 +62,8 @@ post '/process_zip.json' do
       t.say "Here are #{session[:data]["items"].size} opportunities. Press the opportunity number you want more information about."
       items_say = []
       session[:data]["items"].each_with_index{|item,i| items_say << "Opportunity ##{i+1} #{item["title"]}"}
-      t.ask :name => 'selection', :bargein => true, :timeout => 60, :required => true, :attempts => 2,
-          :say => [{:event => "nomatch:1 nomatch:2 nomatch:3", :value => "That wasn't a one-digit opportunity number. Here are your choices: "},
+      t.ask :name => 'selection', :bargein => true, :timeout => 60, :required => true, :attempts => 1,
+          :say => [{:event => "nomatch:1", :value => "That wasn't a one-digit opportunity number. Here are your choices: "},
                    {:value => items_say.join(", ")}], :choices => { :value => "[1 DIGITS]"}
     else
       t.say "No volunteer opportunities found in that zip code. Please try again later."
@@ -76,9 +77,18 @@ post '/process_selection.json' do
     t.on  :event => 'hangup', :next => '/hangup.json'
     if v[:result][:actions][:selection][:value]
       item = session[:data]["items"][v[:result][:actions][:selection][:value].to_i-1]
+      
+      t.message({
+        :to => session[:from][:id],
+        :network => session[:from][:network],
+        :channel => session[:from][:channel]}) do
+        t.say :value => "#{item["title"]} (testing sending a message)"
+      end
+            
       t.say "Information about opportunity #{item["title"]} is as follows: "      
       t.say "Event Details: " + construct_details_string(item)
       t.say "Description: #{item["description"]}. End of description. " unless item["description"].empty? 
+      
     else # no opportunity found
       t.say "No opportunity with that value. Please try again."
     end
@@ -97,6 +107,9 @@ post '/hangup.json' do
   puts " Call complete (CDR received). Call duration: #{v[:call][:duration]} second(s)"
 end
 
+##################
+### WEB ROUTES ###
+##################
 get '/' do
   "
   <html>
