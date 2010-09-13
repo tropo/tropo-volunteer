@@ -78,7 +78,7 @@ post '/process_selection.json' do
       item = session[:data]["items"][v[:result][:actions][:selection][:value].to_i-1]
       t.say "Information about opportunity #{item["title"]} is as follows: "      
       t.say "Event Details: " + construct_details_string(item)
-      t.say "Description: " + item["description"] unless item["description"].empty? 
+      t.say "Description: #{item["description"]}. End of description. " unless item["description"].empty? 
     else # no opportunity found
       t.say "No opportunity with that value. Please try again."
     end
