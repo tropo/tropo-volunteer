@@ -18,6 +18,7 @@ post '/index.json' do
                    {:value => "In what zip code would you like to search for volunteer opportunities in?."}],
                     :choices => { :value => "[5 DIGITS]"}
     end      
+    
     t.on :event => 'hangup', :next => '/hangup.json'
     t.on :event => 'continue', :next => '/process_zip.json'
   t.response
@@ -28,7 +29,6 @@ post '/process_zip.json' do
   t = Tropo::Generator.new
     # if no intial text was captured, use the zip in response to the ask in the previous route
     session[:zip] = v[:result][:actions][:zip][:value].gsub(" ","") unless session[:zip]
-    
     # construct and generate the params url. this is used for generating the JSON request, or in the case of twitter, the URL to the website.
     params = {
       :num => "9",
@@ -39,13 +39,11 @@ post '/process_zip.json' do
       }      
     params_str = ""
     params.each{|key,value| params_str << "&#{key}=#{value}"}
-  
     # If using twitter, let's just give them a URL to the website. We don't want to flood Twitter with all the details we give voice/IM users
     if session[:network] == "TWITTER"
       t.say "Volunteer opportunities in your area for the next 7 days: #{tinyurl("http://www.allforgood.org/search?"+params_str)}"
       t.hangup
     end
-
     # Fetch JSON output for the volunter opportunities from our API provider, allforgood.org
     begin
       session[:data] = JSON.parse(open("http://www.allforgood.org/api/volopps?key=tropo"+params_str).read)
@@ -53,7 +51,6 @@ post '/process_zip.json' do
       t.say "It looks like something went wrong with our volunteer data source. Please try again later."
       t.hangup
     end
-    
     # List the opportunities to the user in the form of a question. The selected opp will be handled in the next route.
     if session[:data]["items"].size > 0
       t.say "Here are #{session[:data]["items"].size} opportunities. Press the opportunity number you want more information about."
@@ -65,8 +62,9 @@ post '/process_zip.json' do
     else
       t.say "No volunteer opportunities found in that zip code. Please try again later."
     end
-    t.on  :event => 'hangup', :next => '/hangup.json'
+    
     t.on  :event => 'continue', :next => '/process_selection.json'    
+    t.on  :event => 'hangup', :next => '/hangup.json'
   t.response  
 end
 
@@ -75,9 +73,11 @@ post '/process_selection.json' do
   t = Tropo::Generator.new
     if v[:result][:actions][:selection][:value]
       item = session[:data]["items"][v[:result][:actions][:selection][:value].to_i-1]
-      t.say "Information about opportunity #{item["title"]} is as follows: "      
-      t.say "Event Details: " + construct_details_string(item)
-      t.say "Description: #{item["description"]}. End of description. " unless item["description"].empty?       
+      session[:say_string] = "" # storing in a session variable to send it via text message later (if the user wants)
+      session[:say_string] += "Information about opportunity #{item["title"]} is as follows: "      
+      session[:say_string] += "Event Details: " + construct_details_string(item)
+      session[:say_string] += "Description: #{item["description"]}. End of description. " unless item["description"].empty?       
+      t.say session[:say_string]
       t.ask :name => 'send_sms', :bargein => true, :timeout => 60, :required => true, :attempts => 1,
             :say => [{:event => "nomatch:1", :value => "That wasn't a valid answer. "},
                    {:value => "Would you like to have a text message sent to you?
@@ -98,7 +98,7 @@ post '/send_text_message.json' do
       t.message({
         :to => v[:result][:actions][:number][:value],
         :network => "SMS",
-        :say => {:value => "info details"}})
+        :say => {:value => session[:say_string]}})
     else # we dont have a number, so either ask for it if they want to send a text message, or send to goodbye.json
       if v[:result][:actions][:send_sms][:value] == "true"
         t.ask :name => 'number_to_text', :bargein => true, :timeout => 60, :required => false, :attempts => 2,
@@ -125,7 +125,8 @@ post '/goodbye.json' do
       t.say "That's all. Communication services donated by http://Tropo.com; data by http://AllForGood.org"
     end 
     t.hangup
-  t.on  :event => 'hangup', :next => '/hangup.json'
+    
+    t.on  :event => 'hangup', :next => '/hangup.json'
   t.response
 end
 
