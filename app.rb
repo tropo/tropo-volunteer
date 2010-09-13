@@ -96,9 +96,10 @@ post '/send_text_message.json' do
   t = Tropo::Generator.new
     if v[:result][:actions][:number_to_text] # they've told a phone # to texxt message
       t.message({
-        :to => v[:result][:actions][:number][:value],
+        :to => v[:result][:actions][:number_to_text][:value],
         :network => "SMS",
         :say => {:value => session[:say_string]}})
+      t.say "Message sent."
     else # we dont have a number, so either ask for it if they want to send a text message, or send to goodbye.json
       if v[:result][:actions][:send_sms][:value] == "true"
         t.ask :name => 'number_to_text', :bargein => true, :timeout => 60, :required => false, :attempts => 2,
