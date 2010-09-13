@@ -75,13 +75,13 @@ post '/process_selection.json' do
       item = session[:data]["items"][v[:result][:actions][:selection][:value].to_i-1]
       session[:say_string] = "" # storing in a session variable to send it via text message later (if the user wants)
       session[:say_string] += "Information about opportunity #{item["title"]} is as follows: "      
-      session[:say_string] += "Event Details: " + construct_details_string(item)
+      session[:say_string] += "Event Details: #{construct_details_string(item)} "
       session[:say_string] += "Description: #{item["description"]}. End of description. " unless item["description"].empty?       
       t.say session[:say_string]
       t.ask :name => 'send_sms', :bargein => true, :timeout => 60, :required => true, :attempts => 1,
             :say => [{:event => "nomatch:1", :value => "That wasn't a valid answer. "},
                    {:value => "Would you like to have a text message sent to you?
-                               Press or say 1 to get a text message, or press or say 'no' to conclude this session."}],
+                               Press 1 or say 'yes' to get a text message; Press 2 or say 'no' to conclude this session."}],
             :choices => { :value => "true(1,yes), false(2,no)"}
     else # no opportunity found
       t.say "No opportunity with that value. Please try again."
