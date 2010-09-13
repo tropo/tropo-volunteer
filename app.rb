@@ -78,16 +78,16 @@ post '/process_selection.json' do
     if v[:result][:actions][:selection][:value]
       item = session[:data]["items"][v[:result][:actions][:selection][:value].to_i-1]
       
-      t.message({
-        :to => session[:from][:id],
-        :network => session[:from][:network],
-        :channel => session[:from][:channel],:say => {:value => "Test"}}) #do
-        # t.say :value => "#{item["title"]} (testing sending a message)"
-      # end
-            
       t.say "Information about opportunity #{item["title"]} is as follows: "      
       t.say "Event Details: " + construct_details_string(item)
       t.say "Description: #{item["description"]}. End of description. " unless item["description"].empty? 
+
+      t.message({
+        :to => "15128267004",
+        :network => "SMS",
+        # :channel => session[:from][:channel],
+        :say => {:value => "Test message"}})
+      
       
     else # no opportunity found
       t.say "No opportunity with that value. Please try again."
