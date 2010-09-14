@@ -188,14 +188,15 @@ get '/' do
             </ul>
           <li>Clone this application from Github and start up your Heroku app</li>
             <ul>
-              <li><span style='font-family: monospace;'>git clone git@github.com:tropo/tropo-volunteer.git</span> from your computer's command line to download the sample Tropo app.</li> 
+              <li><span style='font-family: monospace;'>git clone git@github.com:tropo/tropo-volunteer.git --depth 1</span> from your computer's command line to download the sample Tropo app.</li> 
               <li><span style='font-family: monospace;'>cd tropo-volunteer/</span> to enter the app's directory.</li>
               <li><span style='font-family: monospace;'>heroku create</span> to create your heroku app.
-              <li><span style='font-family: monospace;'>git add . && git commit -m 'initial commit' && git push heroku master</span> to send your new application up to the Heroku cloud.</li>
+              <li><span style='font-family: monospace;'>git push heroku master</span> to send your new application up to the Heroku cloud.</li>
               <li>You can now view your application by going to it's URL or typing <span style='font-family: monospace;'>heroku open</span> from the command line.
             </ul>
           <li><a href='https://www.tropo.com/account/register.jsp'>Sign up</a> and create your first Tropo WebAPI application. Use your Heroku URL plus <span style='font-family: monospace;'>'/index.json'</span> as the URL to your Tropo app.</li>
           <li>There is no step four! Call in, use, and tinker with your app!</li>
+            <ul><li><b>add instructions about committing to your heroku repo and pushing changes</b></li></ul>
         </ol>
     </body>
   </html>
