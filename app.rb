@@ -181,10 +181,21 @@ get '/' do
       <h2><em><a href='http://tropo.com/'>Tropo</a> + <a href='http://sinatrarb.com/'>Sinatra</a> + <a href='http://heroku.com'>Heroku</a> = Easy Ruby Communication Apps</em></h2>
       <h3>Steps to recreate</h3>
         <ol>
-          <li>Sign up for a Tropo and Heroku Account</li>
+          <li>Sign up for a <a href='http://api.heroku.com/signup'>Heroku Account</a> and install the gem:</li>
+            <ul>
+              <li>You'll need ruby, rubygems, and git installed on your computer. <b>link to some instructions</b></li>
+              <li><span style='font-family: monospace;'>sudo gem install heroku</span></li>
+            </ul>
           <li>Clone this application from Github and start up your Heroku app</li>
-          <li>Create a Tropo application to point to your new Heroku app</li>
-          <li>There is no step four!</li>
+            <ul>
+              <li><span style='font-family: monospace;'>git clone git@github.com:tropo/tropo-volunteer.git</span> from your computer's command line to download the sample Tropo app.</li> 
+              <li><span style='font-family: monospace;'>cd tropo-volunteer/</span> to enter the app's directory.</li>
+              <li><span style='font-family: monospace;'>heroku create</span> to create your heroku app.
+              <li><span style='font-family: monospace;'>git add . && git commit -m 'initial commit' && git push heroku master</span> to send your new application up to the Heroku cloud.</li>
+              <li>You can now view your application by going to it's URL or typing <span style='font-family: monospace;'>heroku open</span> from the command line.
+            </ul>
+          <li><a href='https://www.tropo.com/account/register.jsp'>Sign up</a> and create your first Tropo WebAPI application. Use your Heroku URL plus <span style='font-family: monospace;'>'/index.json'</span> as the URL to your Tropo app.</li>
+          <li>There is no step four! Call in, use, and tinker with your app!</li>
         </ol>
     </body>
   </html>
