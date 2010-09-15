@@ -34,7 +34,7 @@ post '/index.json' do
                     :choices => { :value => "[5 DIGITS]"}
     end      
     
-    # Add an 'on' to the JSON reponse, set which resource to go to if a Hangup event occurs on Tropo
+    # Add a 'hangup' to the JSON reponse, set which resource to go to if a Hangup event occurs on Tropo
     t.on :event => 'hangup', :next => '/hangup.json'
     # Add an 'on' to the JSON reponse, set which resource to go when the 'ask' is done executing
     t.on :event => 'continue', :next => '/process_zip.json'
@@ -95,16 +95,22 @@ post '/process_zip.json' do
     
     # Add an 'on' to the JSON reponse, set which resource to go when the 'ask' is done executing
     t.on  :event => 'continue', :next => '/process_selection.json'
-    # Add an 'on' to the JSON reponse, set which resource to go to if a Hangup event occurs on Tropo
+    # Add a 'hangup' to the JSON reponse, set which resource to go to if a Hangup event occurs on Tropo
     t.on  :event => 'hangup', :next => '/hangup.json'
     
   # Return the JSON response via HTTP to Tropo
   t.response  
 end
 
+# This is the resource that the next step in the session is posted to when the 'ask' is completed 
+# in 'process_zip.json'
 post '/process_selection.json' do
+  # Fetch the HTTP Body (the session) of the POST and parse it into a native Ruby Hash object
   v = Tropo::Generator.parse request.env["rack.input"].read
+  
+  # Create a Tropo::Generator object, that is used to build the resulting JSON response
   t = Tropo::Generator.new
+    # If we have a valid response from the last ask, do this section
     if v[:result][:actions][:selection][:value]
       item = session[:data]["items"][v[:result][:actions][:selection][:value].to_i-1]
       session[:say_string] = "" # storing in a session variable to send it via text message later (if the user wants)
@@ -112,6 +118,8 @@ post '/process_selection.json' do
       session[:say_string] += "Event Details: #{construct_details_string(item)} "
       session[:say_string] += "Description: #{item["description"]}. End of description. " unless item["description"].empty?       
       t.say session[:say_string]
+
+      # Ask the user if they would like an SMS sent to them
       t.ask :name => 'send_sms', :bargein => true, :timeout => 60, :required => true, :attempts => 1,
             :say => [{:event => "nomatch:1", :value => "That wasn't a valid answer. "},
                    {:value => "Would you like to have a text message sent to you?
@@ -120,13 +128,23 @@ post '/process_selection.json' do
     else # no opportunity found
       t.say "No opportunity with that value. Please try again."
     end
+    
+    # Add an 'on' to the JSON reponse, set which resource to go when the 'ask' is done executing
     t.on  :event => 'continue', :next => '/send_text_message.json'
+    # Add a 'hangup' to the JSON reponse, set which resource to go to if a Hangup event occurs on Tropo
     t.on  :event => 'hangup', :next => '/hangup.json'
+    
+  # Return the JSON response via HTTP to Tropo
   t.response
 end
 
+# This is the resource that the next step in the session is posted to when the 'ask' is completed 
+# in 'process_selection.json'
 post '/send_text_message.json' do
+  # Fetch the HTTP Body (the session) of the POST and parse it into a native Ruby Hash object
   v = Tropo::Generator.parse request.env["rack.input"].read
+  
+  # Create a Tropo::Generator object, that is used to build the resulting JSON response
   t = Tropo::Generator.new
     if v[:result][:actions][:number_to_text] # they've told a phone # to texxt message
       t.message({
@@ -145,14 +163,24 @@ post '/send_text_message.json' do
       end # no need for an else, send them off to /goodbye.json
     end
     
+    # Tell it to say goodbye if there is no next_url set above
     next_url = '/goodbye.json' if next_url.nil?
+    # Add an 'on' to the JSON reponse, set which resource to go when the 'ask' is done executing
     t.on  :event => 'continue', :next => next_url
+    # Add a 'hangup' to the JSON reponse, set which resource to go to if a Hangup event occurs on Tropo
     t.on  :event => 'hangup', :next => '/hangup.json'
+  
+  # Return the JSON response via HTTP to Tropo
   t.response
 end
 
+# This is the resource that the next step in the session is posted to when the 'ask' is completed 
+# in 'send_text_message.json'
 post '/goodbye.json' do
+  # Fetch the HTTP Body (the session) of the POST and parse it into a native Ruby Hash object
   v = Tropo::Generator.parse request.env["rack.input"].read
+  
+  # Create a Tropo::Generator object, that is used to build the resulting JSON response
   t = Tropo::Generator.new
     if session[:channel] == "VOICE"
       t.say "That's all. Communication services donated by tropo dot com, data by all for good dot org. Have a nice day. Goodbye."
@@ -161,10 +189,12 @@ post '/goodbye.json' do
     end 
     t.hangup
     
+    # Add a 'hangup' to the JSON reponse, set which resource to go to if a Hangup event occurs on Tropo
     t.on  :event => 'hangup', :next => '/hangup.json'
   t.response
 end
 
+# This is the resource that the next step in the session is posted to when any of the resources do a hangup
 post '/hangup.json' do
   v = Tropo::Generator.parse request.env["rack.input"].read
   puts " Call complete (CDR received). Call duration: #{v[:result][:session_duration]} second(s)"
