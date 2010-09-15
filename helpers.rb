@@ -14,7 +14,11 @@ def construct_details_string(item)
   details << "Email: " + item["contactEmail"] unless item["contactEmail"].empty?
   details << "Street: " + item["street1"] unless item["street1"].empty?
   details << "Street: " + item["street2"] unless item["street2"].empty?
-  details << "Google Map: " + shorten_url("http://maps.google.com/maps?f=q&source=s_q&hl=en&geocode=&q="+item["latlong"]) unless item["latlong"].empty?
+  if session[:channel] == "VOICE"
+    details << "Google Map: " + readable_tinyurl(shorten_url("http://maps.google.com/maps?f=q&source=s_q&hl=en&geocode=&q="+item["latlong"])) unless item["latlong"].empty?
+  else
+    details << "Google Map: " + shorten_url("http://maps.google.com/maps?f=q&source=s_q&hl=en&geocode=&q="+item["latlong"]) unless item["latlong"].empty?
+  end
   return details.join(", ")
 end
 
