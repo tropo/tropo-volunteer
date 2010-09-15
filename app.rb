@@ -223,7 +223,7 @@ get '/' do
             <li>Next, enter the app's directory: <span style='font-family: monospace;'>cd tropo-volunteer/</span></li>
             <li>Create your Heroku app; if you do not define a name at the end of this line, Heroku will auto-generate one for you: <span style='font-family: monospace;'>heroku create</span></li>
             <li>Last, send your new application up to the Heroku cloud: <span style='font-family: monospace;'>git push heroku master</span></li>
-            <li>You can now view your application by going to it's URL or by typing <span style='font-family: monospace;'>heroku open</span> from the command line.  You can find the application's URL by typing <span style='font-family: monospace;'>heroku info</span> or by logging into Heroku and clicking on your application in "My Apps". 
+            <li>You can now view your application by going to it's URL or by typing <span style='font-family: monospace;'>heroku open</span> from the command line.  You can find the application's URL by typing <span style='font-family: monospace;'>heroku info</span> or by logging into Heroku and clicking on your application in <b>My Apps</b>. 
           </ul>
         <li><a href='https://www.tropo.com/account/register.jsp'>Sign up</a> and create your first Tropo WebAPI application.</li>
 		  <ul>
