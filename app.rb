@@ -2,7 +2,7 @@
 
 use Rack::Session::Pool
 
-# Resource called by the Tropo WebAPI URL setting http://skitch.com/jsgoecke/dsqew/tropo.com
+# Resource called by the Tropo WebAPI URL setting http://skitch.com/jsgoecke/dsqew/tropo.com 
 post '/index.json' do
   # Fetch the HTTP Body (the session) of the POST and parse it into a native Ruby Hash object
   v = Tropo::Generator.parse request.env["rack.input"].read
