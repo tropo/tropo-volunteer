@@ -206,34 +206,37 @@ end
 get '/' do
   # TO DO - HAML/SASS
   "
-  <html>
-    <head><title>Tropo Example App: Volunteer Opportunities by Phone</title></head>
-    <body>
-      <h2><em><a href='http://tropo.com/'>Tropo</a> + <a href='http://sinatrarb.com/'>Sinatra</a> + <a href='http://heroku.com'>Heroku</a> = Easy Ruby Communication Apps</em></h2>
-      <h3>Steps to recreate</h3>
-        <ol>
-          <li>Sign up for a <a href='http://api.heroku.com/signup'>Heroku Account</a> and install the gem:</li>
-            <ul>
-              <li>You'll need ruby, rubygems, and git installed on your computer. <b>link to some instructions</b></li>
-              <li><span style='font-family: monospace;'>sudo gem install heroku</span></li>
-            </ul>
-          <li>Clone this application from Github and start up your Heroku app</li>
-            <ul>
-              <li><span style='font-family: monospace;'>git clone git@github.com:tropo/tropo-volunteer.git --depth 1</span> from your computer's command line to download the sample Tropo app.</li> 
-              <li><span style='font-family: monospace;'>cd tropo-volunteer/</span> to enter the app's directory.</li>
-              <li><span style='font-family: monospace;'>heroku create</span> to create your heroku app.
-              <li><span style='font-family: monospace;'>git push heroku master</span> to send your new application up to the Heroku cloud.</li>
-              <li>You can now view your application by going to it's URL or typing <span style='font-family: monospace;'>heroku open</span> from the command line.
-            </ul>
-          <li><a href='https://www.tropo.com/account/register.jsp'>Sign up</a> and create your first Tropo WebAPI application. Use your Heroku URL plus <span style='font-family: monospace;'>'/index.json'</span> as the URL to your Tropo app.</li>
-          <li>There is no step four! Call in, use, and tinker with your app!
-            <br />After tweaking, use the following commands to send your changes up to Heroku. Then, call/IM your Tropo app again and hear your modified app!</li>
-            <ul>
-              <li><span style='font-family: monospace;'>git commit -a -m 'your commit message'</span></li>
-              <li><span style='font-family: monospace;'>git push heroku</span></li>
-            </ul>
-        </ol>
-    </body>
-  </html>
+<html>
+  <head><title>Tropo Example App: Volunteer Opportunities by Phone</title></head>
+  <body>
+    <h2><em><a href='http://tropo.com/'>Tropo</a> + <a href='http://sinatrarb.com/'>Sinatra</a> + <a href='http://heroku.com'>Heroku</a> = Easy Ruby Communication Apps</em></h2>
+    <h3>Steps to recreate</h3>
+      <ol>
+        <li>Sign up for a <a href='http://api.heroku.com/signup'>Heroku Account</a> and install the gem:</li>
+          <ul>
+            <li>If you haven't already, you'll first need to install <a href='http://www.ruby-lang.org/en/downloads/'>Ruby</a>, <a href='http://docs.rubygems.org/read/chapter/3'>Rubygems</a>, and <a href='http://book.git-scm.com/2_installing_git.html'>Git</a> on your computer.</li>
+            <li>Once all the prerequisites are installed, next you'll run <span style='font-family: monospace;'>gem install heroku</span> <span style='font-size:90%'><i>(Windows)</i></span> or <span style='font-family: monospace;'>sudo gem install heroku</span> <span style='font-size:90%'><i>(OSX/Linux)</i></span> from the command line.</li>
+          </ul>
+        <li>Clone this application from Github and start up your Heroku app</li>
+          <ul>
+            <li>Enter this into your computer's command line to download the sample Tropo application: <span style='font-family: monospace;'>git clone git@github.com:tropo/tropo-volunteer.git --depth 1</span></li> 
+            <li>Next, enter the app's directory: <span style='font-family: monospace;'>cd tropo-volunteer/</span></li>
+            <li>Create your Heroku app; if you do not define a name at the end of this line, Heroku will auto-generate one for you: <span style='font-family: monospace;'>heroku create</span></li>
+            <li>Last, send your new application up to the Heroku cloud: <span style='font-family: monospace;'>git push heroku master</span></li>
+            <li>You can now view your application by going to it's URL or by typing <span style='font-family: monospace;'>heroku open</span> from the command line.  You can find the application's URL by typing <span style='font-family: monospace;'>heroku info</span> or by logging into Heroku and clicking on your application in <b>My Apps</b>. 
+          </ul>
+        <li><a href='https://www.tropo.com/account/register.jsp'>Sign up</a> and create your first Tropo WebAPI application.</li>
+		  <ul>
+		    <li>Use your Heroku URL plus <span style='font-family: monospace;'>'/index.json'</span> as the URL to your Tropo app. Example: <span style='font-family: monospace;'>http://tropo-volunteer.heroku.com/index.json</span></li>
+		  </ul>
+        <li>There is no step four! Call in, use, and tinker with your app!
+          <br /><br />If you make any tweaks to the application, you can use the following commands to send your changes up to Heroku. Then, call/IM your Tropo app again to hear your modified app!</li>
+          <ul>
+            <li><span style='font-family: monospace;'>git commit -a -m 'your commit message'</span></li>
+            <li><span style='font-family: monospace;'>git push heroku</span></li>
+          </ul>
+      </ol>
+  </body>
+</html>
   "
 end
