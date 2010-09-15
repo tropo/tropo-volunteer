@@ -196,8 +196,11 @@ get '/' do
               <li>You can now view your application by going to it's URL or typing <span style='font-family: monospace;'>heroku open</span> from the command line.
             </ul>
           <li><a href='https://www.tropo.com/account/register.jsp'>Sign up</a> and create your first Tropo WebAPI application. Use your Heroku URL plus <span style='font-family: monospace;'>'/index.json'</span> as the URL to your Tropo app.</li>
-          <li>There is no step four! Call in, use, and tinker with your app!</li>
-            <ul><li><b>add instructions about committing to your heroku repo and pushing changes</b></li></ul>
+          <li>There is no step four! Call in, use, and tinker with your app!<br />After tweaking, use the following commands to send your changes up to Heroku.</li>
+            <ul>
+              <li><span style='font-family: monospace;'>git commit -a -m 'your commit message'</span></li>
+              <li><span style='font-family: monospace;'>git push heroku</span></li>
+            </ul>
         </ol>
     </body>
   </html>
