@@ -1,5 +1,11 @@
 %w(rubygems sinatra tropo-webapi-ruby open-uri json/pure helpers.rb).each{|lib| require lib}
 
+# For the Web UI
+set :views, File.dirname(__FILE__) + '/templates'
+set :public, File.dirname(__FILE__) + '/public'
+set :haml, { :format => :html5 }
+
+# To manage the web session coookies
 use Rack::Session::Pool
 
 # Resource called by the Tropo WebAPI URL setting
@@ -200,26 +206,15 @@ end
 ### WEB ROUTES ###
 ##################
 get '/' do
-  # TO DO - HAML/SASS
-  "
-  <html>
-    <head><title>Tropo Example App: Volunteer Opportunities by Phone</title></head>
-    <body>
-      <h2><em><a href='http://tropo.com/'>Tropo</a> + <a href='http://sinatrarb.com/'>Sinatra</a> + <a href='http://heroku.com'>Heroku</a> = Easy Ruby Communication Apps</em></h2>
-      <h3>Steps to recreate</h3>
-        <ol>
-          <li>You will need to have <a href='http://www.ruby-lang.org/en/downloads/'>Ruby</a>, <a href='http://docs.rubygems.org/read/chapter/3'>Rubygems</a>, <a href='http://docs.heroku.com/heroku-command'>Heroku</a> and <a href='http://book.git-scm.com/2_installing_git.html'>Git</a> installed first.</li>
-  		<li>Drop into your command line and run the following commands:</li>
-  		<ul>
-  			<li><span style='font-family: monospace;'>git clone git@github.com:tropo/tropo-volunteer.git --depth 1</span></li>
-  			<li><span style='font-family: monospace;'>cd tropo-volunteer</span></li>
-  			<li><span style='font-family: monospace;'>heroku create</span></li>
-  			<li><span style='font-family: monospace;'>git push heroku master</span></li>
-  		</ul>
-  		<li>Log in or sign up for <a href='http://www.tropo.com'>Tropo</a> and create a new WebAPI application. For the URL, enter in your Heroku app's URL and append <span style='font-family: monospace;'>/index.json</span> to the end of it.</li>
-  		<li>That's it!  Call in, use, and tinker with your app!</li>
-  	</ol>
-  	</body>
-  </html>
-  "
+  haml :index
+end
+
+get '/stylesheets/style.css' do
+  content_type 'text/css', :charset => 'utf-8'
+  sass :style
+end
+
+get '/stylesheets/fonts.css' do
+  content_type 'text/css', :charset => 'utf-8'
+  sass :fonts
 end
