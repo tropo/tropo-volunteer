@@ -33,7 +33,7 @@ post '/index.json' do
     else
       # If this is a voice session, then add a voice-oriented ask to the JSON response
       # with the appropriate options
-      t.ask :name => 'zip', :bargein => true, :timeout => 60, :required => true, :attempts => 2,
+      t.ask :name => 'zip', :bargein => true, :timeout => 60, :attempts => 2,
           :say => [{:event => "timeout", :value => "Sorry, I did not hear anything."},
                    {:event => "nomatch:1 nomatch:2", :value => "Oops, that wasn't a five-digit zip code."},
                    {:value => "Please enter your zip code to search for volunteer opportunities in your area."}],
@@ -90,7 +90,7 @@ post '/process_zip.json' do
       items_say = []
       session[:data]["items"].each_with_index{|item,i| items_say << "Opportunity ##{i+1} #{item["title"]}"}
       # Add an 'ask' to the JSON response
-      t.ask :name => 'selection', :bargein => true, :timeout => 60, :required => true, :attempts => 1,
+      t.ask :name => 'selection', :bargein => true, :timeout => 60, :attempts => 1,
           :say => [{:event => "nomatch:1", :value => "That wasn't a one-digit opportunity number. Here are your choices: "},
                    {:value => items_say.join(", ")}], :choices => { :value => "[1 DIGITS]"}
     else
@@ -124,7 +124,7 @@ post '/process_selection.json' do
       t.say session[:say_string]
 
       # Ask the user if they would like an SMS sent to them
-      t.ask :name => 'send_sms', :bargein => true, :timeout => 60, :required => true, :attempts => 1,
+      t.ask :name => 'send_sms', :bargein => true, :timeout => 60, :attempts => 1,
             :say => [{:event => "nomatch:1", :value => "That wasn't a valid answer. "},
                    {:value => "Would you like to have a text message sent to you?
                                Press 1 or say 'yes' to get a text message; Press 2 or say 'no' to conclude this session."}],
