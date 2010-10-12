@@ -6,7 +6,7 @@ Steps to recreate
 1. You will need to have [Ruby](http://www.ruby-lang.org/en/downloads/), [Rubygems](http://docs.rubygems.org/read/chapter/3), [Heroku](http://docs.heroku.com/heroku-command) and [Git](http://book.git-scm.com/2_installing_git.html) installed first.  
 
 2. Drop into your command line and run the following commands:  
-    * `git clone git@github.com:tropo/tropo-volunteer.git --depth 1`  
+    * `git clone http://github.com/tropo/tropo-volunteer.git --depth 1`  
     * `cd tropo-volunteer`  
     * `heroku create`  
     * `git push heroku master`  
